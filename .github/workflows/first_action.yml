@@ -4,8 +4,8 @@ jobs:
  first_job: 
   runs-on: ubuntu-latest
   steps: 
-   -name: print hi
-    run: echo "hello"
-   -name: print by
-    run: echo "done byee"
+   - name: print hi
+     run: echo "hello"
+   - name: print by
+     run: echo "done byee"
    
