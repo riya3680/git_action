@@ -1,14 +1,5 @@
-name: PR Checklist Validation
-
-on:
-  pull_request:
-    types: [opened, edited, synchronize]
-
-jobs:
-  validate-pr-checklist:
-    runs-on: ubuntu-latest
-    steps:
       - name: Check Required PR Checklists
+        id: validation
         run: |
           PR_BODY="${{ github.event.pull_request.body }}"
           PR_AUTHOR="${{ github.event.pull_request.user.login }}"
@@ -16,22 +7,22 @@ jobs:
           JIRA_REGEX="https:\/\/te-collinsongroup\.atlassian\.net\/browse\/[A-Z0-9-]+"
           MISSING_CHECKS=""
 
-          # Validate "Reason for Changes" field (must contain at least one letter)
+          # Validate "Reason for Changes" field
           REASON_SECTION=$(echo "$PR_BODY" | awk '/Reason for Changes:/,/^$/' | tail -n +2)
           if [[ -z "$REASON_SECTION" || ! "$REASON_SECTION" =~ [a-zA-Z] ]]; then
-            MISSING_CHECKS="$MISSING_CHECKS\n❌ **Missing or invalid:** *Reason for Changes* (must contain at least one letter)"
+            MISSING_CHECKS="$MISSING_CHECKS\n❌ **Missing or invalid:** *Reason for Changes*"
           fi
 
-          # Validate "Developer" field (must contain at least one letter)
+          # Validate "Developer" field
           DEVELOPER_SECTION=$(echo "$PR_BODY" | awk '/Developer:/,/^$/' | tail -n +2)
           if [[ -z "$DEVELOPER_SECTION" || ! "$DEVELOPER_SECTION" =~ [a-zA-Z] ]]; then
-            MISSING_CHECKS="$MISSING_CHECKS\n❌ **Missing or invalid:** *Developer* (must contain at least one letter)"
+            MISSING_CHECKS="$MISSING_CHECKS\n❌ **Missing or invalid:** *Developer*"
           fi
 
           # Validate JIRA Ticket format
           JIRA_TICKET=$(echo "$PR_BODY" | grep -oE "$JIRA_REGEX")
           if [[ -z "$JIRA_TICKET" ]]; then
-            MISSING_CHECKS="$MISSING_CHECKS\n❌ **Invalid or Missing:** *JIRA Ticket* (Must follow format: https://te-collinsongroup.atlassian.net/browse/PROJECT-123)"
+            MISSING_CHECKS="$MISSING_CHECKS\n❌ **Invalid or Missing:** *JIRA Ticket*"
           fi
 
           REQUIRED_CHECKLISTS=(
@@ -51,13 +42,11 @@ jobs:
             fi
           done
 
+          echo "PR_AUTHOR=${PR_AUTHOR}" >> $GITHUB_ENV
+          echo "::set-output name=missing_checks::$MISSING_CHECKS"
+
           if [[ -n "$MISSING_CHECKS" ]]; then
-            echo "🚨 PR validation failed! Missing checklists detected."
-            echo "PR_AUTHOR=${PR_AUTHOR}" >> $GITHUB_ENV
-            echo "MISSING_CHECKS=${MISSING_CHECKS}" >> $GITHUB_ENV
             exit 1
-          else
-            echo "✅ All required checklists are marked."
           fi
 
       - name: Post Comment if Checklists Are Missing
@@ -68,7 +57,7 @@ jobs:
           script: |
             const issue_number = context.payload.pull_request.number;
             const pr_author = process.env.PR_AUTHOR;
-            const missing_checks = process.env.MISSING_CHECKS;
+            const missing_checks = `${{ steps.validation.outputs.missing_checks }}`;
 
             github.rest.issues.createComment({
               owner: context.repo.owner,
