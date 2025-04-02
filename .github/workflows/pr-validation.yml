@@ -1,3 +1,13 @@
+name: PR Checklist Validation
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  validate-pr-checklist:
+    runs-on: ubuntu-latest
+    steps:
       - name: Check Required PR Checklists
         id: validation
         run: |
@@ -37,7 +47,7 @@
 
           # Check all required checklists
           for CHECK in "${REQUIRED_CHECKLISTS[@]}"; do
-            if ! echo "$PR_BODY" | grep -q "\- \[[^[:space:]]\] $CHECK"; then
+            if ! echo "$PR_BODY" | grep -q "\- \[[xX]\] $CHECK"; then
               MISSING_CHECKS="$MISSING_CHECKS\n❌ **Missing:** $CHECK"
             fi
           done
@@ -59,9 +69,11 @@
             const pr_author = process.env.PR_AUTHOR;
             const missing_checks = `${{ steps.validation.outputs.missing_checks }}`;
 
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issue_number,
-              body: `@${pr_author} 🚨 **Your PR is missing required fields or checklist items!**\n${missing_checks}\n\nPlease update the PR description accordingly to meet the required criteria.`
-            });
+            if (missing_checks.trim()) {
+              github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue_number,
+                body: `@${pr_author} 🚨 **Your PR is missing required fields or checklist items!**\n${missing_checks}\n\nPlease update the PR description accordingly to meet the required criteria.`
+              });
+            }
