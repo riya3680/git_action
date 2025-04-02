@@ -1,0 +1,48 @@
+log Listening on 56150
+log Teams App Test Tool is being launched for you to debug the Teams app: http://localhost:56150
+debug started web socket client
+debug started web socket client
+debug stopping web socket client
+debug stopping web socket client
+debug started web socket client
+debug started web socket client
+log InternalServiceError: connect ECONNREFUSED 127.0.0.1:3978
+    at exports.UserBotError (/Users/riya.sethia/.fx/bin/testTool/0.2.6/node_modules/@microsoft/teams-app-test-tool/dist/index.js:8:973136)
+    at InstallationUserBotAccessor.handleAxiosError (/Users/riya.sethia/.fx/bin/testTool/0.2.6/node_modules/@microsoft/teams-app-test-tool/dist/index.js:8:942889)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async InstallationUserBotAccessor.sendActivity (/Users/riya.sethia/.fx/bin/testTool/0.2.6/node_modules/@microsoft/teams-app-test-tool/dist/index.js:8:942154)
+    at async InstallationUserBotAccessor.sendInstallationUpdateActivity (/Users/riya.sethia/.fx/bin/testTool/0.2.6/node_modules/@microsoft/teams-app-test-tool/dist/index.js:8:945913) {
+  code: 'UserBotError',
+  innerHttpError: undefined
+}
+log InternalServiceError: connect ECONNREFUSED 127.0.0.1:3978
+    at exports.UserBotError (/Users/riya.sethia/.fx/bin/testTool/0.2.6/node_modules/@microsoft/teams-app-test-tool/dist/index.js:8:973136)
+    at ConversationUpdateUserBotAccessor.handleAxiosError (/Users/riya.sethia/.fx/bin/testTool/0.2.6/node_modules/@microsoft/teams-app-test-tool/dist/index.js:8:942889)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ConversationUpdateUserBotAccessor.sendActivity (/Users/riya.sethia/.fx/bin/testTool/0.2.6/node_modules/@microsoft/teams-app-test-tool/dist/index.js:8:942154)
+    at async ConversationUpdateUserBotAccessor.sendInstallationMemberAddedActivity (/Users/riya.sethia/.fx/bin/testTool/0.2.6/node_modules/@microsoft/teams-app-test-tool/dist/index.js:8:944496) {
+  code: 'UserBotError',
+  innerHttpError: undefined
+}
+debug stopping web socket client
+debug stopping web socket client
+debug started web socket client
+debug started web socket client
+log InternalServiceError: connect ECONNREFUSED 127.0.0.1:3978
+    at exports.UserBotError (/Users/riya.sethia/.fx/bin/testTool/0.2.6/node_modules/@microsoft/teams-app-test-tool/dist/index.js:8:973136)
+    at InstallationUserBotAccessor.handleAxiosError (/Users/riya.sethia/.fx/bin/testTool/0.2.6/node_modules/@microsoft/teams-app-test-tool/dist/index.js:8:942889)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async InstallationUserBotAccessor.sendActivity (/Users/riya.sethia/.fx/bin/testTool/0.2.6/node_modules/@microsoft/teams-app-test-tool/dist/index.js:8:942154)
+    at async InstallationUserBotAccessor.sendInstallationUpdateActivity (/Users/riya.sethia/.fx/bin/testTool/0.2.6/node_modules/@microsoft/teams-app-test-tool/dist/index.js:8:945913) {
+  code: 'UserBotError',
+  innerHttpError: undefined
+}
+log InternalServiceError: connect ECONNREFUSED 127.0.0.1:3978
+    at exports.UserBotError (/Users/riya.sethia/.fx/bin/testTool/0.2.6/node_modules/@microsoft/teams-app-test-tool/dist/index.js:8:973136)
+    at ConversationUpdateUserBotAccessor.handleAxiosError (/Users/riya.sethia/.fx/bin/testTool/0.2.6/node_modules/@microsoft/teams-app-test-tool/dist/index.js:8:942889)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ConversationUpdateUserBotAccessor.sendActivity (/Users/riya.sethia/.fx/bin/testTool/0.2.6/node_modules/@microsoft/teams-app-test-tool/dist/index.js:8:942154)
+    at async ConversationUpdateUserBotAccessor.sendInstallationMemberAddedActivity (/Users/riya.sethia/.fx/bin/testTool/0.2.6/node_modules/@microsoft/teams-app-test-tool/dist/index.js:8:944496) {
+  code: 'UserBotError',
+  innerHttpError: undefined
+}
