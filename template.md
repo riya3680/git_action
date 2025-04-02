@@ -1,0 +1,42 @@
+## PR Description (to be filled by developer)
+- **Reason for Changes:** <!-- Briefly explain why these changes are being made -->
+- **JIRA Ticket:** [JIRA Link]()
+- **Commit Validation:**  
+  - [ ] Only my (developer's) commits are present in this PR — no commits from other developers or merge commits from higher branches are present.  
+- **Screenshots:** (Screenshots must include the browser URL showing: Environment name & System datetime)
+  - [ ] **Testing Done:** Thorough testing in dbt Cloud IDE (sandbox schema)
+  - Snowflake Sandbox/DEV/UAT Validation: 
+    - [ ] **Feature → DEV** → Sandbox schema screenshots <!-- Attach screenshots -->
+    - [ ] **DEV → UAT** → DEV environment screenshots <!-- Attach screenshots -->
+    - [ ] **UAT → PROD** → UAT environment screenshots <!-- Attach screenshots -->
+  - dbt Cloud IDE Builds & Tests: <!-- Attach screenshots -->
+    - [ ] **Feature → DEV** → Your dbt IDE screenshots <!-- Attach screenshots -->
+    - [ ] **DEV → UAT** → DEV Job successful run screenshots <!-- Attach screenshots -->
+    - [ ] **UAT → PROD** → UAT Job successful run screenshots <!-- Attach screenshots -->
+- [ ] **Infrastructure Check:**
+  - [ ] Required databases are available.
+  - [ ] Required schemas are created through the data-platform repo.
+  - [ ] Required source tables are available/updated.
+- [ ] **Full Refresh Check:** Variable for full refreshes required in dbt GitHub job (for incremental models).
+- [ ] **Need More Compute:** Larger warehouse needed for bigger models (if applicable).
+- [ ] **Latest Changes Pulled:** Latest target branch changes pulled into feature branch.
+- [ ] **Final DEV Testing:** All tests passed, no unready changes present.
+- [ ] **Schema Documentation:** updated `_schema.yml` with correct schema, data types, PII tagging and descriptions.
+- **Deployment Readiness:**
+  - [ ] This change is ready for further deployment in DEV, UAT & PROD.
+  - [ ] Changes have been validated and look good in DEV/UAT.
+- **Developer:** <!-- Your Name -->
+
+---
+
+## PR Approval Checklist (to be filled by approver)
+- **Commit Validation:**  
+  - [ ] Only respective developer's commits are present in this PR—no commits from other developers or merge commits from higher branches.
+- [ ] **Infrastructure Check:**
+  - [ ] Databases and schemas are updated in `dbt_project.yml`.
+- [ ] **Branch Naming:** Follows convention `<feat|fix|test>/<team_name>-<JIRA_ticket_no>-<description>`.
+- [ ] **Screenshots Provided:** Proof of testing in dbt Cloud IDE (sandbox schema) & correct screenshots are included in PR.
+- [ ] **Schema Documentation:** `_schema.yml` updated with correct schema, data types, PII tagging and descriptions.
+- [ ] **Full Refresh Check:** Variable for full refreshes added in dbt GitHub job (for incremental models).
+- [ ] **Reviewer Confirmation:** PR reviewed and approved by a Peer.
+- [ ] **Deployment Plan:** PROD deployment scheduled for Tuesday or Thursday (avoid Fridays)
