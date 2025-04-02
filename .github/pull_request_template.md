@@ -27,16 +27,3 @@
   - [ ] Changes have been validated and look good in DEV/UAT.
 - **Developer:** <!-- Your Name -->
 
----
-
-## PR Approval Checklist (to be filled by approver)
-- **Commit Validation:**  
-  - [ ] Only respective developer's commits are present in this PR—no commits from other developers or merge commits from higher branches.
-- [ ] **Infrastructure Check:**
-  - [ ] Databases and schemas are updated in `dbt_project.yml`.
-- [ ] **Branch Naming:** Follows convention `<feat|fix|test>/<team_name>-<JIRA_ticket_no>-<description>`.
-- [ ] **Screenshots Provided:** Proof of testing in dbt Cloud IDE (sandbox schema) & correct screenshots are included in PR.
-- [ ] **Schema Documentation:** `_schema.yml` updated with correct schema, data types, PII tagging and descriptions.
-- [ ] **Full Refresh Check:** Variable for full refreshes added in dbt GitHub job (for incremental models).
-- [ ] **Reviewer Confirmation:** PR reviewed and approved by a Peer.
-- [ ] **Deployment Plan:** PROD deployment scheduled for Tuesday or Thursday (avoid Fridays)
