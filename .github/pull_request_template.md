@@ -21,7 +21,7 @@
 - [ ] **Need More Compute:** Larger warehouse needed for bigger models (if applicable).
 - [ ] **Latest Changes Pulled:** Latest target branch changes pulled into feature branch.
 - [ ] **Final DEV Testing:** All tests passed, no unready changes present.
-- [ ] **Schema Documentation:** updated `_schema.yml` with correct schema, data types, PII tagging and descriptions.
+- [ ] **Schema Documentation:** updated "`_schema.yml`" with correct schema, data types, PII tagging and descriptions.
 - **Deployment Readiness:**
   - [ ] This change is ready for further deployment in DEV, UAT & PROD.
   - [ ] Changes have been validated and look good in DEV/UAT.
