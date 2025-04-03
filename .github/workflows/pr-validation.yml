@@ -49,24 +49,35 @@ jobs:
             'Changes have been validated and look good in DEV/UAT.'
           )
 
+          # Define an array to store missing checklists
+          MISSING_CHECKLISTS=()
+          
           # Check all required checklists
           for CHECK in "${REQUIRED_CHECKLISTS[@]}"; do
-          # Extract the checkbox content
-          CHECKBOX=$(echo "$PR_BODY" | grep -oP "(?<=- \[)[^\]]+(?=\] $CHECK)")
-  
-          # Trim spaces
-          TRIMMED_CHECKBOX=$(echo "$CHECKBOX" | xargs)
-
-          # If the checkbox is empty or contains only spaces, mark as missing
-          if [[ -z "$TRIMMED_CHECKBOX" ]]; then
-          MISSING_CHECKS="$MISSING_CHECKS\n❌ **Missing or invalid:** $CHECK"
-          fi
+            # Extract the checkbox content using regex
+            CHECKBOX=$(echo "$PR_BODY" | grep -oP "- \[\s*(.*?)\s*\] $CHECK" | sed -E "s/- \[\s*(.*?)\s*\] $CHECK/\1/")
+          
+            # Trim spaces
+            TRIMMED_CHECKBOX=$(echo "$CHECKBOX" | xargs)
+          
+            # If the checkbox is empty, mark as missing
+            if [[ -z "$TRIMMED_CHECKBOX" ]]; then
+              MISSING_CHECKLISTS+=("$CHECK")  # Add to the list
+            fi
           done
           
-          echo "PR_AUTHOR=${PR_AUTHOR}" >> $GITHUB_ENV
-          echo "missing_checks=$MISSING_CHECKS" >> $GITHUB_ENV
-
-          if [[ -n "$MISSING_CHECKS" ]]; then
+          # Check if there are missing checklists
+          if [[ ${#MISSING_CHECKLISTS[@]} -ne 0 ]]; then
+            echo -e "❌ **PR Validation Failed:** The following required checklists are missing:\n"
+            
+            for ITEM in "${MISSING_CHECKLISTS[@]}"; do
+              echo " - [ ] $ITEM"
+            done
+          
+            # Store in GitHub Actions environment
+            echo "missing_checks=${MISSING_CHECKLISTS[*]}" >> $GITHUB_ENV
+          
+            # Exit with failure
             exit 1
           fi
 
