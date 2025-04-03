@@ -55,7 +55,7 @@ jobs:
           # Check all required checklists
           for CHECK in "${REQUIRED_CHECKLISTS[@]}"; do
             # Extract the checkbox content using regex
-            CHECKBOX=$(echo "$PR_BODY" | grep -oP "- \[\s*(.*?)\s*\] $CHECK" | sed -E "s/- \[\s*(.*?)\s*\] $CHECK/\1/")
+            CHECKBOX=$(echo "$PR_BODY" | grep -oP "- \[\s*(.*?)\s*\] $CHECK")
           
             # Trim spaces
             TRIMMED_CHECKBOX=$(echo "$CHECKBOX" | xargs)
