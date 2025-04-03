@@ -4,6 +4,10 @@ on:
   pull_request:
     types: [opened, edited, synchronize]
 
+permissions:
+  pull-requests: write
+  contents: read
+
 jobs:
   validate-pr-checklist:
     runs-on: ubuntu-latest
@@ -53,7 +57,7 @@ jobs:
           done
 
           echo "PR_AUTHOR=${PR_AUTHOR}" >> $GITHUB_ENV
-          echo "::set-output name=missing_checks::$MISSING_CHECKS"
+          echo "missing_checks=$MISSING_CHECKS" >> $GITHUB_ENV
 
           if [[ -n "$MISSING_CHECKS" ]]; then
             exit 1
