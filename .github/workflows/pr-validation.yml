@@ -51,11 +51,18 @@ jobs:
 
           # Check all required checklists
           for CHECK in "${REQUIRED_CHECKLISTS[@]}"; do
-            if ! echo "$PR_BODY" | grep -q "\- \[[xX]\] $CHECK"; then
-              MISSING_CHECKS="$MISSING_CHECKS\n❌ **Missing:** $CHECK"
-            fi
-          done
+          # Extract the checkbox content
+          CHECKBOX=$(echo "$PR_BODY" | grep -oP "(?<=- \[)[^\]]+(?=\] $CHECK)")
+  
+          # Trim spaces
+          TRIMMED_CHECKBOX=$(echo "$CHECKBOX" | xargs)
 
+          # If the checkbox is empty or contains only spaces, mark as missing
+          if [[ -z "$TRIMMED_CHECKBOX" ]]; then
+          MISSING_CHECKS="$MISSING_CHECKS\n❌ **Missing or invalid:** $CHECK"
+          fi
+          done
+          
           echo "PR_AUTHOR=${PR_AUTHOR}" >> $GITHUB_ENV
           echo "missing_checks=$MISSING_CHECKS" >> $GITHUB_ENV
 
