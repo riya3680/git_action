@@ -31,9 +31,12 @@ jobs:
           fi
 
           # Validate "Developer" field
-          if ! echo "$PR_BODY" | grep -qE "Developer:\s*[a-zA-Z]+"; then
-          echo "❌ **Failed:** *Developer* field is missing or invalid."
-          exit 1
+          DEV_SECTION=$(echo "$PR_BODY" | awk -F'Developer:' '/Developer:/ {print $2}' | xargs)
+          DEV_WORD_COUNT=$(echo "$DEV_SECTION" | wc -w)
+          
+          if [[ -z "$DEV_SECTION" || "$DEV_WORD_COUNT" -lt 2 ]]; then
+            echo "❌ **Failed:** *Developer* field must have at least 2 words."
+            exit 1  # Fails the validation
           fi
           
           # Validate JIRA Ticket format
