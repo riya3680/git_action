@@ -16,7 +16,7 @@ jobs:
         id: validation
         run: |
           PR_BODY="${{ github.event.pull_request.body }}"
-          #PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+         
 
           JIRA_REGEX="https:\/\/te-collinsongroup\.atlassian\.net\/browse\/[A-Z0-9-]+"
           MISSING_CHECKS=""
