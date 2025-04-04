@@ -31,12 +31,11 @@ jobs:
           fi
 
           # Validate "Developer" field
-          DEVELOPER_SECTION=$(echo "$PR_BODY" | awk '/Developer:/,/^$/' | tail -n +2)
-          if [[ -z "$DEVELOPER_SECTION" || ! "$DEVELOPER_SECTION" =~ [a-zA-Z] ]]; then
-            echo "❌ **Failed:** *Developer* field is missing or invalid."
-            exit 1  # Fails the validation
+          if ! echo "$PR_BODY" | grep -qE "Developer:\s*[a-zA-Z]+"; then
+          echo "❌ **Failed:** *Developer* field is missing or invalid."
+          exit 1
           fi
-
+          
           # Validate JIRA Ticket format
           JIRA_TICKET=$(echo "$PR_BODY" | grep -oE "$JIRA_REGEX")
           if [[ -z "$JIRA_TICKET" ]]; then
