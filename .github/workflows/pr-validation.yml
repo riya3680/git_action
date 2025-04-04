@@ -21,23 +21,29 @@ jobs:
           JIRA_REGEX="https:\/\/te-collinsongroup\.atlassian\.net\/browse\/[A-Z0-9-]+"
           MISSING_CHECKS=""
 
-          # Validate "Reason for Changes" field
+          #check reason for change
           REASON_SECTION=$(echo "$PR_BODY" | awk '/Reason for Changes:/,/^$/' | tail -n +2)
-          if [[ -z "$REASON_SECTION" || ! "$REASON_SECTION" =~ [a-zA-Z] ]]; then
-            MISSING_CHECKS="$MISSING_CHECKS\n❌ **Missing or invalid:** *Reason for Changes*"
+          WORD_COUNT=$(echo "$REASON_SECTION" | wc -w)
+
+          if [[ -z "$REASON_SECTION" || "$WORD_COUNT" -lt 7 ]]; then
+            echo "❌ **Failed:** *Reason for Changes* must have at least 7 words."
+            exit 1  # Fails the validation
           fi
 
           # Validate "Developer" field
           DEVELOPER_SECTION=$(echo "$PR_BODY" | awk '/Developer:/,/^$/' | tail -n +2)
           if [[ -z "$DEVELOPER_SECTION" || ! "$DEVELOPER_SECTION" =~ [a-zA-Z] ]]; then
-            MISSING_CHECKS="$MISSING_CHECKS\n❌ **Missing or invalid:** *Developer*"
+            echo "❌ **Failed:** *Developer* field is missing or invalid."
+            exit 1  # Fails the validation
           fi
 
           # Validate JIRA Ticket format
           JIRA_TICKET=$(echo "$PR_BODY" | grep -oE "$JIRA_REGEX")
           if [[ -z "$JIRA_TICKET" ]]; then
-            MISSING_CHECKS="$MISSING_CHECKS\n❌ **Invalid or Missing:** *JIRA Ticket*"
+            echo "❌ **Failed:** *JIRA Ticket* is missing or has an invalid format."
+            exit 1  # Fails the validation
           fi
+
 
           REQUIRED_CHECKLISTS=(
             'Required databases are available.'
@@ -49,38 +55,14 @@ jobs:
             'Changes have been validated and look good in DEV/UAT.'
           )
 
-          # Define an array to store missing checklists
-          MISSING_CHECKLISTS=()
-          
-          # Check all required checklists
           for CHECK in "${REQUIRED_CHECKLISTS[@]}"; do
-            # Extract the checkbox content using regex
-            CHECKBOX=$(echo "$PR_BODY" | grep -oP "- \[\s*(.*?)\s*\] $CHECK")
-          
-            # Trim spaces
-            TRIMMED_CHECKBOX=$(echo "$CHECKBOX" | xargs)
-          
-            # If the checkbox is empty, mark as missing
-            if [[ -z "$TRIMMED_CHECKBOX" ]]; then
-              MISSING_CHECKLISTS+=("$CHECK")  # Add to the list
-            fi
+          if echo "$PR_BODY" | grep -qP "\[\s*[yYxX]\s*\]\s*$CHECK"; then
+              echo "✅ Pass: Checklist item marked as completed - '$CHECK'"
+          else
+              echo "❌ Fail: Checklist item not marked as completed - '$CHECK'"
+          fi
           done
           
-          # Check if there are missing checklists
-          if [[ ${#MISSING_CHECKLISTS[@]} -ne 0 ]]; then
-            echo -e "❌ **PR Validation Failed:** The following required checklists are missing:\n"
-            
-            for ITEM in "${MISSING_CHECKLISTS[@]}"; do
-              echo " - [ ] $ITEM"
-            done
-          
-            # Store in GitHub Actions environment
-            echo "missing_checks=${MISSING_CHECKLISTS[*]}" >> $GITHUB_ENV
-          
-            # Exit with failure
-            exit 1
-          fi
-
       - name: Post Comment if Checklists Are Missing
         if: failure()
         uses: actions/github-script@v7
@@ -99,3 +81,7 @@ jobs:
                 body: `@${pr_author} 🚨 **Your PR is missing required fields or checklist items!**\n${missing_checks}\n\nPlease update the PR description accordingly to meet the required criteria.`
               });
             }
+
+
+
+           
