@@ -22,13 +22,20 @@ jobs:
           MISSING_CHECKS=""
 
           #check reason for change
-          REASON_SECTION=$(echo "$PR_BODY" | awk '/Reason for Changes:/,/^$/' | tail -n +2)
-          WORD_COUNT=$(echo "$REASON_SECTION" | wc -w)
-
-          if [[ -z "$REASON_SECTION" || "$WORD_COUNT" -lt 7 ]]; then
+          REASON_LINE=$(echo "$PR_BODY" | grep -iE 'Reason for Changes:')
+          
+          # Extract the text after the colon and trim spaces
+          REASON_TEXT=$(echo "$REASON_LINE" | sed -E 's/.*Reason for Changes:\s*//')
+          
+          # Count the number of words in the reason text
+          WORD_COUNT=$(echo "$REASON_TEXT" | wc -w)
+          
+          # Fail if less than 7 words
+          if [[ -z "$REASON_TEXT" || "$WORD_COUNT" -lt 7 ]]; then
             echo "❌ **Failed:** *Reason for Changes* must have at least 7 words."
-            exit 1  # Fails the validation
+            exit 1
           fi
+
 
           # Validate "Developer" field
           DEV_SECTION=$(echo "$PR_BODY" | awk -F'Developer:' '/Developer:/ {print $2}' | xargs)
