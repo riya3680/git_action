@@ -60,7 +60,7 @@ jobs:
             'Required schemas are created through the data-platform repo.'
             'Required source tables are available/updated.'
             'Final DEV Testing: All tests passed, no unready changes present.'
-            'Schema Documentation'
+            'Schema Documentation: updated with correct schema, data types, PII tagging and descriptions.'
             'This change is ready for further deployment in DEV, UAT & PROD.'
             'Changes have been validated and look good in DEV/UAT.'
           )
