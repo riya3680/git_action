@@ -16,7 +16,7 @@ jobs:
         id: validation
         run: |
           PR_BODY="${{ github.event.pull_request.body }}"
-         
+          echo "first"
           MISSING_CHECKS=""
 
           #check reason for change
@@ -34,7 +34,7 @@ jobs:
             exit 1
           fi
 
-
+          echo "2nd"
           JIRA_REGEX="https:\/\/te-collinsongroup\.atlassian\.net\/browse\/[A-Z]+-[0-9]+"
           # Validate JIRA Ticket format
           JIRA_TICKET=$(echo "$PR_BODY" | grep -oE "$JIRA_REGEX")
@@ -44,7 +44,7 @@ jobs:
             exit 1
           fi
 
-
+          echo "3rd"
           # Validate "Developer" field
           DEV_SECTION=$(echo "$PR_BODY" | awk -F'Developer:' '/Developer:/ {print $2}' | xargs)
           DEV_WORD_COUNT=$(echo "$DEV_SECTION" | wc -w)
@@ -54,7 +54,7 @@ jobs:
             exit 1  # Fails the validation
           fi
           
-          
+          echo "four"
           REQUIRED_CHECKLISTS=(
             'Required databases are available.'
             'Required schemas are created through the data-platform repo.'
