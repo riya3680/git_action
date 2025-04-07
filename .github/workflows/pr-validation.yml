@@ -72,6 +72,7 @@ jobs:
               echo "❌ Fail: Checklist item not marked as completed - '$CHECK'"
           fi
           done
+          echo "completed"
           
       - name: Post Comment if Checklists Are Missing
         if: failure()
