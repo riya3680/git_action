@@ -43,7 +43,7 @@ jobs:
           DEV_TEXT=$(echo "$DEV_LINE" | sed -E 's/.*\*\*Developer:\*\*\s*//' | sed -E 's/<!--.*-->//g' | xargs)
           DEV_WORD_COUNT=$(echo "$DEV_TEXT" | wc -w)
                     
-          if [[ -z "$DEV_SECTION" || "$DEV_WORD_COUNT" -lt 1 ]]; then
+          if [[ -z "$DEV_TEXT" || "$DEV_WORD_COUNT" -lt 1 ]]; then
             echo "❌ **Failed:** *Developer* field must have at least 1 words."
             exit 1  # Fails the validation
           fi
