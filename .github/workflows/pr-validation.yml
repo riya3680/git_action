@@ -39,6 +39,8 @@ jobs:
             ((MISSING_COUNT++))
             MISSING_CHECKS+="- Reason for Changes must have at least 7 words.\n"
           fi
+          
+          echo "missing_count=$MISSING_COUNT" >> $GITHUB_OUTPUT
 
           echo "3rd"
           # Validate "Developer" field
@@ -85,6 +87,8 @@ jobs:
           else
             echo "✅ All required checklist items are completed."
           fi
+
+          shell: bash {0} 
           
       - name: Comment on PR
         if: always()
@@ -98,7 +102,9 @@ jobs:
             const count = parseInt("${{ steps.validation.outputs.missing_count }}");
 
             
-            let body = "";
+            let body = `🔍 **Checklist Validation Result:**\n\n`;
+            body += `🧮 **Total Missing Checks:** \`${count}\`\n`;
+
 
              if (count > 0) {
               body = `@${pr_author} 🚨 **Validation Failed!**, Please update the PR description to meet all requirements.`;
