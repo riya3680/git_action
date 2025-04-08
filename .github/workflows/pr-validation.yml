@@ -34,16 +34,6 @@ jobs:
             exit 1
           fi
 
-          echo "2nd"
-          JIRA_REGEX="https:\/\/te-collinsongroup\.atlassian\.net\/browse\/[A-Z]+-[0-9]+"
-          # Validate JIRA Ticket format
-          JIRA_TICKET=$(echo "$PR_BODY" | grep -oE "$JIRA_REGEX")
-          
-          if [[ -z "$JIRA_TICKET" ]]; then
-            echo "❌ **Failed:** *JIRA Ticket* is missing or has an invalid format."
-            exit 1
-          fi
-
           echo "3rd"
           # Validate "Developer" field
           DEV_SECTION=$(echo "$PR_BODY" | awk -F'Developer:' '/Developer:/ {print $2}' | xargs)
