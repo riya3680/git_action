@@ -60,22 +60,18 @@ jobs:
           )
 
           for CHECK in "${REQUIRED_CHECKLISTS[@]}"; do
-            if echo "$PR_BODY" | grep -qF "[x] $CHECK" || echo "$PR_BODY" | grep -qE "[y] $CHECK"; then
+          if echo "$PR_BODY" | grep -qP "\[\s*[yYxX]\s*\].*${CHECK}"; then
               echo "✅ Pass: Checklist item marked as completed - '$CHECK'"
-            else
+          else
               echo "❌ Fail: Checklist item not marked as completed - '$CHECK'"
-              MISSING_CHECKS+="- $CHECK\n"
-            fi
+          fi
           done
-
           echo "completed"
 
           # Output for next step
           echo "missing_checks<<EOF" >> $GITHUB_OUTPUT
           echo -e "$MISSING_CHECKS" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-          
-
           
       - name: Post Comment if Checklists Are Missing
         if: failure()
