@@ -62,34 +62,49 @@ jobs:
               echo "✅ Pass: Checklist item marked as completed - '$CHECK'"
           else
               echo "❌ Fail: Checklist item not marked as completed - '$CHECK'"
+              MISSING_CHECKS+="- $CHECK\n"
+              ((MISSING_COUNT++))
           fi
           done
           echo "completed"
 
-          # Output for next step
+          # Output missing checks to GitHub Actions
           echo "missing_checks<<EOF" >> $GITHUB_OUTPUT
           echo -e "$MISSING_CHECKS" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+
+          # Fail the step if any checklist is missing
+          if [ "$MISSING_COUNT" -gt 0 ]; then
+            echo "❌ One or more required checklist items are missing. Failing the job."
+            exit 1
+          else
+            echo "✅ All required checklist items are completed."
+          fi
           
-      - name: Post Comment if Checklists Are Missing
-        if: failure()
+      - name: Comment on PR
+        if: always()
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const issue_number = context.payload.pull_request.number;
-            const pr_author = process.env.PR_AUTHOR;
-            const missing_checks = `${{ steps.validation.outputs.missing_checks }}`;
+            const pr_author = "${{ steps.pr_data.outputs.author }}";
+            const missing = `${{ steps.validation.outputs.missing_checks }}`.trim();
 
-            if (missing_checks.trim()) {
-              github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issue_number,
-                body: `@${pr_author} 🚨 **Your PR is missing required fields or checklist items!**\n${missing_checks}\n\nPlease update the PR description accordingly to meet the required criteria.`
-              });
+            let body = "";
+
+            if (missing) {
+              body = `@${pr_author} 🚨 **Your PR is missing required fields or checklist items!**\n${missing}\n\nPlease update the PR description accordingly to meet the required criteria.`;
+            } else {
+              body = `✅ All cleared. Good to go!`;
             }
 
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number,
+              body
+            });
 
 
            
