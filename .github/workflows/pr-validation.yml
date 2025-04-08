@@ -19,12 +19,14 @@ jobs:
         id: validation
         run: |
           PR_BODY="${{ github.event.pull_request.body }}"
-          echo "first"
           MISSING_CHECKS=""
+          MISSING_COUNT=0
+          
+          echo "Starting checklist validation..."
 
           #check reason for change
           REASON_LINE=$(echo "$PR_BODY" | grep -iE 'Reason for Changes:')
-          
+  
           # Extract the text after the colon and trim spaces
           REASON_TEXT=$(echo "$REASON_LINE" | sed -E 's/.*Reason for Changes:\s*//')
           
@@ -34,7 +36,8 @@ jobs:
           # Fail if less than 7 words
           if [[ -z "$REASON_TEXT" || "$WORD_COUNT" -lt 7 ]]; then
             echo "❌ **Failed:** *Reason for Changes* must have at least 7 words."
-            exit 1
+            ((MISSING_COUNT++))
+            MISSING_CHECKS+="- Reason for Changes must have at least 7 words.\n"
           fi
 
           echo "3rd"
@@ -45,7 +48,8 @@ jobs:
                     
           if [[ -z "$DEV_TEXT" || "$DEV_WORD_COUNT" -lt 1 ]]; then
             echo "❌ **Failed:** *Developer* field must have at least 1 words."
-            exit 1  # Fails the validation
+            ((MISSING_COUNT++))
+            MISSING_CHECKS+="- Developer field must have at least 1 word.\n"
           fi
           
           echo "four"
@@ -89,14 +93,14 @@ jobs:
           script: |
             const issue_number = context.payload.pull_request.number;
             const pr_author = "${{ steps.pr_data.outputs.author }}";
-            const missing = `${{ steps.validation.outputs.missing_checks }}`.trim();
-
+            const count = parseInt("${{ steps.validation.outputs.missing_count }}");
+            
             let body = "";
 
-            if (missing) {
-              body = `@${pr_author} 🚨 **Your PR is missing required fields or checklist items!**\n${missing}\n\nPlease update the PR description accordingly to meet the required criteria.`;
+             if (count > 0) {
+              body = `@${pr_author} 🚨 **Validation Failed!**\n\nYou have \`${count}\` issue(s):\n${missing}\n\nPlease update the PR description to meet all requirements.`;
             } else {
-              body = `✅ All cleared. Good to go!`;
+              body = `✅ checklist cleared @${pr_author} — All validations passed! Your PR is good to go. 🚀`;
             }
 
             await github.rest.issues.createComment({
