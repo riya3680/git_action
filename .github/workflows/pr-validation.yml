@@ -88,7 +88,7 @@ jobs:
             echo "✅ All required checklist items are completed."
           fi
 
-          shell: bash {0} 
+        shell: bash {0} 
           
       - name: Comment on PR
         if: always()
