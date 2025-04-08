@@ -7,6 +7,9 @@ on:
 permissions:
   pull-requests: write
   contents: read
+env:
+  PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+
 
 jobs:
   validate-pr-checklist:
@@ -36,9 +39,10 @@ jobs:
 
           echo "3rd"
           # Validate "Developer" field
-          DEV_SECTION=$(echo "$PR_BODY" | awk -F'**Developer:**' '/Developer:/ {print $2}' | xargs)
-          DEV_WORD_COUNT=$(echo "$DEV_SECTION" | wc -w)
-          
+          DEV_LINE=$(echo "$PR_BODY" | grep -iE '^\s*-\s*\*\*Developer:\*\*')
+          DEV_TEXT=$(echo "$DEV_LINE" | sed -E 's/.*\*\*Developer:\*\*\s*//' | sed -E 's/<!--.*-->//g' | xargs)
+          DEV_WORD_COUNT=$(echo "$DEV_TEXT" | wc -w)
+                    
           if [[ -z "$DEV_SECTION" || "$DEV_WORD_COUNT" -lt 1 ]]; then
             echo "❌ **Failed:** *Developer* field must have at least 1 words."
             exit 1  # Fails the validation
@@ -56,13 +60,22 @@ jobs:
           )
 
           for CHECK in "${REQUIRED_CHECKLISTS[@]}"; do
-          if echo "$PR_BODY" | grep -qP "\[\s*[yYxX]\s*\].*${CHECK}"; then
+            if echo "$PR_BODY" | grep -qF "[x] $CHECK" || echo "$PR_BODY" | grep -qF "[y] $CHECK"; then
               echo "✅ Pass: Checklist item marked as completed - '$CHECK'"
-          else
+            else
               echo "❌ Fail: Checklist item not marked as completed - '$CHECK'"
-          fi
+              MISSING_CHECKS+="- $CHECK\n"
+            fi
           done
+
           echo "completed"
+
+          # Output for next step
+          echo "missing_checks<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$MISSING_CHECKS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+
           
       - name: Post Comment if Checklists Are Missing
         if: failure()
