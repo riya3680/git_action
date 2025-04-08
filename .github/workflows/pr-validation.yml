@@ -36,7 +36,7 @@ jobs:
 
           echo "3rd"
           # Validate "Developer" field
-          DEV_SECTION=$(echo "$PR_BODY" | awk -F'Developer:' '/Developer:/ {print $2}' | xargs)
+          DEV_SECTION=$(echo "$PR_BODY" | awk -F'**Developer:**' '/Developer:/ {print $2}' | xargs)
           DEV_WORD_COUNT=$(echo "$DEV_SECTION" | wc -w)
           
           if [[ -z "$DEV_SECTION" || "$DEV_WORD_COUNT" -lt 1 ]]; then
@@ -49,8 +49,8 @@ jobs:
             'Required databases are available.'
             'Required schemas are created through the data-platform repo.'
             'Required source tables are available/updated.'
-            'Final DEV Testing: All tests passed, no unready changes present.'
-            'Schema Documentation: updated with correct schema, data types, PII tagging and descriptions.'
+            '**Final DEV Testing:** All tests passed, no unready changes present.'
+            '**Schema Documentation:** updated with correct schema, data types, PII tagging and descriptions.'
             'This change is ready for further deployment in DEV, UAT & PROD.'
             'Changes have been validated and look good in DEV/UAT.'
           )
