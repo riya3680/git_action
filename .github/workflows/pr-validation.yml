@@ -26,35 +26,28 @@ jobs:
 
           #check reason for change
           REASON_LINE=$(echo "$PR_BODY" | grep -iE 'Reason for Changes:')
-  
           # Extract the text after the colon and trim spaces
           REASON_TEXT=$(echo "$REASON_LINE" | sed -E 's/.*Reason for Changes:\s*//')
-          
           # Count the number of words in the reason text
           WORD_COUNT=$(echo "$REASON_TEXT" | wc -w)
-          
           # Fail if less than 7 words
           if [[ -z "$REASON_TEXT" || "$WORD_COUNT" -lt 7 ]]; then
             echo "❌ **Failed:** *Reason for Changes* must have at least 7 words."
             ((MISSING_COUNT++))
             MISSING_CHECKS+="- Reason for Changes must have at least 7 words.\n"
           fi
-          
-          echo "missing_count=$MISSING_COUNT" >> $GITHUB_OUTPUT
 
-          echo "3rd"
           # Validate "Developer" field
           DEV_LINE=$(echo "$PR_BODY" | grep -iE '^\s*-\s*\*\*Developer:\*\*')
           DEV_TEXT=$(echo "$DEV_LINE" | sed -E 's/.*\*\*Developer:\*\*\s*//' | sed -E 's/<!--.*-->//g' | xargs)
-          DEV_WORD_COUNT=$(echo "$DEV_TEXT" | wc -w)
-                    
+          DEV_WORD_COUNT=$(echo "$DEV_TEXT" | wc -w)         
           if [[ -z "$DEV_TEXT" || "$DEV_WORD_COUNT" -lt 1 ]]; then
             echo "❌ **Failed:** *Developer* field must have at least 1 words."
             ((MISSING_COUNT++))
             MISSING_CHECKS+="- Developer field must have at least 1 word.\n"
           fi
           
-          echo "four"
+          
           REQUIRED_CHECKLISTS=(
             'Required databases are available.'
             'Required schemas are created through the data-platform repo.'
@@ -108,6 +101,7 @@ jobs:
 
              if (count > 0) {
               body = `@${pr_author} 🚨 **Validation Failed!**, Please update the PR description to meet all requirements.`;
+              body += `📝 **Missing Items:**\n\n\`\`\`\n${missing}\n\`\`\``;
             } else {
               body = `✅ checklist cleared @${pr_author} — All validations passed! Your PR is good to go. 🚀`;
             }
