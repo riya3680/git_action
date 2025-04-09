@@ -1,0 +1,98 @@
+models:
+  - name: snp_dim__network_monthly
+    description: |
+      Snapshot model for dim__network_monthly snapshots
+
+    config:
+      tags:
+        - snapshot
+
+    columns:
+      - name: id
+        description: Unique identifier
+        data_type: string
+        tests:
+          - not_null
+      - name: outlet_id
+        description: Outlet ID
+        data_type: string
+      - name: cg_region
+        description: Collinson group region
+        data_type: string
+      - name: country_name
+        description: Outlet country
+        data_type: string
+      - name: DATE
+        description: Load date of the data
+        data_type: date
+        tests:
+          - not_null
+      - name: location_city
+        description: Outlet city
+        data_type: string
+      - name: location_code
+        description: Outlet location id
+        data_type: string
+      - name: terminal
+        description: Outlet terminal
+        data_type: string
+      - name: location_country_iso
+        description: Outlet country ISO code
+        data_type: string
+      - name: location_name
+        description: Outlet location name
+        data_type: string
+      - name: location_type
+        description: Outlet location type
+        data_type: string
+      - name: legacy_outlet_code
+        description: Legacy Outlet code
+        data_type: string
+      - name: outlet_location_key
+        description: Outlet location key
+        data_type: string
+      - name: outlet_name
+        description: Outlet name
+        data_type: string
+      - name: outlet_operator_code
+        description: Outlet operator code
+        data_type: string
+      - name: outlet_passenger_type
+        description: Outlet passenger type
+        data_type: string
+      - name: outlet_program
+        description: Outlet program name
+        data_type: string
+      - name: outlet_program_code
+        description: Outlet program code
+        data_type: string
+      - name: outlet_status
+        description: Status of outlet
+        data_type: string
+      - name: outlet_type
+        description: Outlet type
+        data_type: string
+      - name: partnership_region_code
+        description: Partnership region code
+        data_type: string
+      - name: program_active_flag
+        description: Whether program is active or not
+        data_type: string
+      - name: outlet_exclusivity
+        description: Exclusivity flag
+        data_type: string
+      - name: partner_name
+        description: Partner name
+        data_type: string
+      - name: dbt_scd_id
+        description: scd id
+        data_type: string
+      - name: dbt_updated_at
+        description: record update timestamp
+        data_type: timestamp
+      - name: dbt_valid_from
+        description: record valid from
+        data_type: timestamp
+      - name: dbt_valid_to
+        description: record valid to
+        data_type: timestamp
