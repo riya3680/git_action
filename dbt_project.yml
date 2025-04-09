@@ -1,0 +1,489 @@
+name: 'collinson_idp'
+version: '1.0.0'
+config-version: 2
+
+profile: collinson_idp
+
+vars:
+  # to create db table in the schema named as AUDIT
+  dbt_dq_tool_schema: dq_audit
+  dbt_dq_tool_database: data_quality
+  dq_tools_enable_store_test_results: True
+  dbt_dq_tool_test_coverage_exclusion:
+    by_database: ['dummy'] # dummy inputs
+    by_schema: ['dq_tools_mart'] # exclude all dq_tools.03_mart
+    by_table: ['dq_issue_log', 'dummy'] # dummy inputs
+  lounge_cost_start_date: null
+  deal_start_date: null
+  allow_full_refresh: false
+
+# more useful colors: #CECE5A #C4C1A4
+models:
+  collinson_idp:
+    01_raw:
+      database: raw
+      ppass:
+        tags:
+          - 'sq'
+          - 'ppass'
+        schema: ppass
+
+      evo1_evo2_loungegateway:
+        tags:
+          - 'sq'
+          - 'evo1'
+          - 'evo2'
+          - 'loungegateway'
+        schema: evo1_evo2_loungegateway
+
+      cms:
+        tags:
+          - 'sq'
+          - 'cms'
+        schema: cms
+
+      lms:
+        tags:
+          - 'lms'
+        schema: lms
+
+      heap:
+        tags:
+          - 'heap'
+        schema: heap
+
+      partner_connect:
+        schema: partner_connect
+        materialized: view
+
+      location:
+        schema: location
+        materialized: table
+
+
+    02_staging_quality:
+      database: staging_quality
+      +docs:
+        node_color: "#CECE5A"
+
+      cergea:
+        tags:
+          - 'psa'
+          - 'sq'
+          - 'cergea'
+        schema: cergea
+
+      oag:
+        tags:
+          - 'psa'
+          - 'sq'
+          - 'oag'
+        schema: oag
+
+      stripe:
+        tags:
+          - 'psa'
+          - 'sq'
+          - 'stripe'
+        schema: stripe
+
+      infor:
+        schema: 'infor'
+        materialized: table
+
+      rule_engine:
+        schema: 'rule_engine'
+        materialized: table
+
+      ppass:
+        tags:
+          - 'sq'
+          - 'ppass'
+        schema: 'ppass'
+        materialized: view
+
+      ppai:
+        tags:
+          - 'sq'
+          - 'ppai'
+        schema: 'ppai'
+        materialized: view
+
+      evo1:
+        tags:
+          - 'sq'
+          - 'evo1'
+        schema: 'evo1'
+        materialized: view
+
+      evo2:
+        tags:
+          - 'sq'
+          - 'evo2'
+        schema: 'evo2'
+        materialized: view
+
+      loungegateway:
+        tags:
+          - 'sq'
+          - 'loungegateway'
+        schema: 'loungegateway'
+        materialized: view
+
+      ods:
+        schema: 'ods'
+
+      qualtrics:
+        schema: 'qualtrics'
+
+      trustpilot:
+        schema: 'trustpilot'
+      
+      dynata:
+        schema: 'dynata'
+
+      google_playstore:
+        schema: 'google_playstore'
+
+      sproutsocial:
+        schema: 'sproutsocial'
+
+      ketchum:
+        schema: 'ketchum'
+
+      apple_appstore:
+        schema: 'apple_appstore'
+
+      sf_partnership:
+        schema: 'sf_partnership'
+      
+      sf_business_development:
+        schema: 'sf_business_development'
+
+      sf_consumer_survey:
+        schema: 'sf_consumer_survey'
+
+      mixpanel:
+        schema: 'mixpanel'
+
+      opinyin:
+        schema: 'opinyin'
+
+      product_catalogue:
+        schema: product_catalogue
+        database: staging_quality
+
+      cms:
+        schema: cms
+        database: staging_quality
+
+      ga4:
+        schema: ga4
+        database: staging_quality
+
+      client:
+        schema: client
+        database: staging_quality
+        materialized: view
+
+      heap:
+        schema: heap
+        database: staging_quality
+        materialized: view
+
+      rule_engine:
+        schema: rule_engine
+
+      billing:
+        schema: billing
+      
+      visits:
+        schema: visits
+
+      lms:
+        schema: lms
+        database: staging_quality
+        
+      tagetik:
+        schema: 'tagetik'
+        materialized: table
+
+      location:
+        schema: location
+        database: staging_quality
+        materialized: table 
+
+      consumer:
+        schema: consumer
+        database: staging_quality
+
+
+
+    03_data_domain:
+
+      dm_consumers:
+        tags: 
+          - 'consumers_domain'
+        +docs:
+          node_color: "#F3AA60"
+        
+        subdm_consumer: 
+          tags:
+            - 'consumer_subdomain'
+
+          datamart:
+            tags: 
+              - 'consumption'
+              - 'dm'
+              - 'datamart'
+            database: subdm_consumer
+            schema: datamart
+
+        subdm_consumer_dh:
+          tags:
+            - 'dyson_consumer_subdomain'
+
+          core:
+            tags:
+              - 'consumption'
+              - 'core'
+            database: subdm_consumer_dh
+            schema: core
+
+        subdm_visits:
+          tags:
+            - 'visits_subdomain'
+
+          datamart:
+            tags: 
+              - 'consumption'
+              - 'dm'
+              - 'datamart'
+            database: subdm_visits
+            schema: datamart
+
+        subdm_consumer_feedback:
+          tags:
+            - 'consumer_feedback'
+
+          datamart:
+            tags: 
+              - 'consumer_feedback'
+              - 'dm'
+              - 'datamart'
+            database: subdm_consumer_feedback
+            schema: datamart
+
+        subdm_consumer_digital_analytics:
+          tags:
+            - 'consumer_digital_analytics'
+
+          datamart:
+            tags: 
+              - 'consumer_digital_analytics'
+              - 'dm'
+              - 'datamart'
+            database: subdm_consumer_digital_analytics
+            schema: datamart
+
+        subdm_prospective_consumer:
+          tags:
+            - 'prospective_consumer'
+
+          datamart:
+            tags: 
+              - 'prospective_consumer'
+              - 'dm'
+              - 'datamart'
+            database: subdm_prospective_consumer
+            schema: datamart
+
+        subdm_membership_dh:
+          tags:
+            - 'membership'
+
+          datamart:
+            tags: 
+              - 'membership'
+              - 'dm'
+              - 'datamart'
+            database: subdm_membership_dh
+            schema: datamart
+
+        subdm_visits_dh:
+          tags:
+            - 'dyson_visits_subdomain'
+
+          datamart:
+            tags: 
+              - 'consumption'
+              - 'dm'
+              - 'datamart'
+            database: subdm_visits_dh
+            schema: datamart
+
+        subdm_consumer_profile_dh:
+          tags:
+            - 'consumer_profile_subdomain'
+
+          datamart:
+            tags:
+              - 'consumer_profile'
+              - 'datamart'
+            database: subdm_consumer_profile_dh
+            schema: datamart
+
+      dm_client:
+        subdm_deals:
+          datamart:
+            materialized: view
+            schema: datamart
+            database: subdm_deals
+
+        subdm_deals_dh:
+          datamart:
+            materialized: view
+            schema: datamart
+            database: subdm_deals_dh
+
+        subdm_clients_dh:
+          datamart:
+            materialized: view
+            schema: datamart
+            database: subdm_clients_dh
+
+        subdm_client_feedback:
+          tags:
+            - 'client_feedback'
+
+          datamart:
+            tags: 
+              - 'client_feedback'
+              - 'dm'
+              - 'datamart'
+            database: subdm_client_feedback
+            schema: datamart
+
+        subdm_client_information:
+          tags:
+            - collinson_client_information
+          datamart:
+            materialized: view
+            database: subdm_client_information
+            schema: datamart
+
+      dm_partners:
+        tags:
+          - 'partners_domain'
+        +docs:
+            node_color: "#EF6262"
+
+        subdm_collinson_inventory:
+          tags:
+            - collinson_inventory_subdomain
+          datamart:
+            materialized: table
+            database: subdm_collinson_inventory
+            schema: datamart
+
+        subdm_collinson_inventory_dh:
+          tags:
+            - collinson_inventory_subdomain_dh
+          datamart:
+            materialized: view
+            database: subdm_collinson_inventory_dh
+            schema: datamart
+        
+        subdm_location:
+          datamart:
+            materialized: table
+            database: subdm_location
+            schema: datamart
+
+      dm_finance:
+        subdm_financial_planning_analytics:
+          datamart:
+            materialized: table
+            schema: "datamart"
+            database: "subdm_financial_planning_analytics"
+        
+        subdm_finops_order_2_cash:
+          datamart:
+            materialized: table
+            schema: "datamart"
+            database: "subdm_finops_order_2_cash"
+
+      dm_third_party:
+        tags:
+          - 'third_party_domain'
+        +docs:
+            node_color: "#AAC8A7"
+
+        subdm_flights_schedule:
+          tags:
+            - 'flights_schedule_subdomain'
+            - 'oag'
+          
+          datamart:
+            tags: 
+              - 'consumption'
+              - 'dm'
+              - 'datamart'
+            database: subdm_flights_schedule
+            schema: datamart
+
+    04_analytics:
+        tags: 
+          - 'analytics_layer'
+        +docs:
+          node_color: "#F3AA60"
+        
+        datamart:
+          tags: 
+            - 'consumption'
+            - 'datamart'
+          database: analytics
+          schema: datamart
+
+    archive:
+      +materialized: ephemeral
+        
+  dq_tools:
+    +enabled: true
+    database: data_quality
+    schema: 'dq_audit'
+
+metrics:
+  dq_tools:
+    +enabled: false
+
+tests:
+  collinson_idp:
+    01_raw:
+      +severity: warn
+    02_staging_quality:
+      # Set the severity lower not to stop the data flow, just drop warn
+      +severity: warn
+    03_data_domain:
+      +severity: warn  
+  dq_tools:
+    # we don't want any tests on dq_tools models
+    +enabled: false
+
+on-run-end:
+  - '{{ dq_tools.store_test_results(results) }}'
+
+query-comment: 
+  comment: "dbt_metadata_dict: {{ query_comment(node) }}"
+  append: true  # Snowflake auto strip off prepended comments in its query history, hence we need to set append = true (query comment will be appended at the end of the script)
+
+seeds:
+  collinson_idp:
+    database: raw
+    schema: dbt_seeds
+    +docs:
+      show: false
+    london_pricing_exceptions:
+      +enabled: "{{ target.name in ('dev', 'test', 'default') }}"
+    hk_pricing_exceptions:
+      +enabled: "{{ target.name in ('dev', 'test', 'default') }}"
