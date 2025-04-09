@@ -68,7 +68,7 @@ jobs:
           )
 
           for CHECK in "${REQUIRED_CHECKLISTS[@]}"; do
-          if echo "$PR_BODY" | grep -qP "\[\s*[yYxX]\s*\].*${CHECK}"; then
+          if echo "$PR_BODY" | grep -qP "\[\s*[yYxX✓]\s*\].*${CHECK}"; then
               echo "✅ Pass: Checklist item marked as completed - '$CHECK'"
           else
               echo "❌ Fail: Checklist item not marked as completed - '$CHECK'"
