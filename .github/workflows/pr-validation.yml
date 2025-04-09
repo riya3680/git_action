@@ -101,7 +101,7 @@ jobs:
 
              if (count > 0) {
               body = `@${pr_author} 🚨 **Validation Failed!**, Please update the PR description to meet all requirements.`;
-              body += `📝 **Missing Items:**\n\n\`\`\`\n${missing}\n\`\`\``;
+              body += `\n📝 **Missing Items List :**\n\n\`\`\`\n${missing}\n\`\`\``;
             } else {
               body = `✅ checklist cleared @${pr_author} — All validations passed! Your PR is good to go. 🚀`;
             }
