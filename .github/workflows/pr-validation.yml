@@ -37,6 +37,15 @@ jobs:
             MISSING_CHECKS+="- Reason for Changes must have at least 7 words.\n"
           fi
 
+          # Validate JIRA Ticket link
+          JIRA_REGEX="https:\/\/te-collinsongroup\.atlassian\.net\/browse\/[A-Z]+-[0-9]+"
+          JIRA_TICKET=$(echo "$PR_BODY" | grep -oE "$JIRA_REGEX")
+          if [[ -z "$JIRA_TICKET" ]]; then
+            echo "❌ **Failed:** *JIRA Ticket* is missing or has an invalid format."
+            ((MISSING_COUNT++))
+            MISSING_CHECKS+="- JIRA Ticket is missing or has invalid format (e.g., https://te-collinsongroup.atlassian.net/browse/ABC-123).\n"
+          fi
+
           # Validate "Developer" field
           DEV_LINE=$(echo "$PR_BODY" | grep -iE '^\s*-\s*\*\*Developer:\*\*')
           DEV_TEXT=$(echo "$DEV_LINE" | sed -E 's/.*\*\*Developer:\*\*\s*//' | sed -E 's/<!--.*-->//g' | xargs)
