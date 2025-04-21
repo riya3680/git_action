@@ -24,7 +24,7 @@ jobs:
           echo "reading body"
           echo "$PR_BODY"
           
-          echo "Starting checklist validation..."
+          echo "Starting checklist validation....."
 
           #check reason for change
           REASON_LINE=$(echo "$PR_BODY" | grep -iE 'Reason for Changes:')
