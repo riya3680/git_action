@@ -21,6 +21,8 @@ jobs:
           PR_BODY="${{ github.event.pull_request.body }}"
           MISSING_CHECKS=""
           MISSING_COUNT=0
+          echo "reading body"
+          echo "$PR_BODY"
           
           echo "Starting checklist validation..."
 
