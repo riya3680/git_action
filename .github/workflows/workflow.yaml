@@ -22,14 +22,16 @@ jobs:
           MISSING_CHECKS=""
           MISSING_COUNT=0
           
-          echo "Starting checklist validation..."
+          echo "Starting checklist validation ..."
 
           #check reason for change
           REASON_LINE=$(echo "$PR_BODY" | grep -iE 'Reason for Changes:')
+          echo "Starting reading ..."
           # Extract the text after the colon and trim spaces
           REASON_TEXT=$(echo "$REASON_LINE" | sed -E 's/.*Reason for Changes:\s*//')
           # Count the number of words in the reason text
           WORD_COUNT=$(echo "$REASON_TEXT" | wc -w)
+          echo "counting ..."
           # Fail if less than 7 words
           if [[ -z "$REASON_TEXT" || "$WORD_COUNT" -lt 7 ]]; then
             echo "❌ **Failed:** *Reason for Changes* must have at least 7 words."
