@@ -1,0 +1,129 @@
+name: PR Checklist Validation
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+permissions:
+  pull-requests: write
+  contents: read
+env:
+  PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+
+
+jobs:
+  validate-pr-checklist:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Required PR Checklists
+        id: validation
+        run: |
+          PR_BODY="${{ github.event.pull_request.body }}"
+          MISSING_CHECKS=""
+          MISSING_COUNT=0
+          echo "reading body"
+          echo "$PR_BODY"
+          
+          echo "Starting checklist validation..."
+
+          #check reason for change
+          REASON_LINE=$(echo "$PR_BODY" | grep -iE 'Reason for Changes:')
+          # Extract the text after the colon and trim spaces
+          REASON_TEXT=$(echo "$REASON_LINE" | sed -E 's/.*Reason for Changes:\s*//')
+          # Count the number of words in the reason text
+          WORD_COUNT=$(echo "$REASON_TEXT" | wc -w)
+          # Fail if less than 7 words
+          if [[ -z "$REASON_TEXT" || "$WORD_COUNT" -lt 7 ]]; then
+            echo "❌ **Failed:** *Reason for Changes* must have at least 7 words."
+            ((MISSING_COUNT++))
+            MISSING_CHECKS+="- Reason for Changes must have at least 7 words.\n"
+          fi
+
+          # Validate JIRA Ticket link
+          JIRA_REGEX="https:\/\/te-collinsongroup\.atlassian\.net\/browse\/[A-Z0-9]+-[0-9]+"
+          JIRA_TICKET=$(echo "$PR_BODY" | grep -oE "$JIRA_REGEX")
+          if [[ -z "$JIRA_TICKET" ]]; then
+            echo "❌ **Failed:** *JIRA Ticket* is missing or has an invalid format."
+            ((MISSING_COUNT++))
+            MISSING_CHECKS+="- JIRA Ticket is missing or has invalid format (e.g., https://te-collinsongroup.atlassian.net/browse/ABC-123).\n"
+          fi
+
+          # Validate "Developer" field
+          DEV_LINE=$(echo "$PR_BODY" | grep -iE '^\s*-\s*\*\*Developer:\*\*')
+          DEV_TEXT=$(echo "$DEV_LINE" | sed -E 's/.*\*\*Developer:\*\*\s*//' | sed -E 's/<!--.*-->//g' | xargs)
+          DEV_WORD_COUNT=$(echo "$DEV_TEXT" | wc -w)         
+          if [[ -z "$DEV_TEXT" || "$DEV_WORD_COUNT" -lt 1 ]]; then
+            echo "❌ **Failed:** *Developer* field must have at least 1 words."
+            ((MISSING_COUNT++))
+            MISSING_CHECKS+="- Developer field must have at least 1 word.\n"
+          fi
+          
+          
+          REQUIRED_CHECKLISTS=(
+            'Required databases are available.'
+            'Required schemas are created through the data-platform repo.'
+            'Required source tables are available/updated.'
+            '\*\*Final DEV Testing:\*\* All tests passed, no unready changes present.'
+            'This change is ready for further deployment in DEV, UAT & PROD.'
+            'Changes have been validated and look good in DEV/UAT.'
+          )
+
+          for CHECK in "${REQUIRED_CHECKLISTS[@]}"; do
+          if echo "$PR_BODY" | grep -qP "\[\s*[yYxX✓]\s*\].*${CHECK}"; then
+              echo "✅ Pass: Checklist item marked as completed - '$CHECK'"
+          else
+              echo "❌ Fail: Checklist item not marked as completed - '$CHECK'"
+              MISSING_CHECKS+="- $CHECK\n"
+              ((MISSING_COUNT++))
+          fi
+          done
+          echo "completed"
+
+          # Output missing checks to GitHub Actions
+          echo "missing_checks<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$MISSING_CHECKS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "missing_count=$MISSING_COUNT" >> $GITHUB_OUTPUT
+
+          # Fail the step if any checklist is missing
+          if [ "$MISSING_COUNT" -gt 0 ]; then
+            echo "❌ One or more required checklist items are missing. Failing the job."
+            exit 1
+          else
+            echo "✅ All required checklist items are completed."
+          fi
+
+        shell: bash {0} 
+          
+      - name: Comment on PR
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issue_number = context.payload.pull_request.number;
+            const pr_author = "${{ steps.pr_data.outputs.author }}";
+            const missing = `${{ steps.validation.outputs.missing_checks }}`;
+            const count = parseInt("${{ steps.validation.outputs.missing_count }}");
+
+            
+            let body = `🔍 **Checklist Validation Result:**\n\n`;
+            body += `🧮 **Total Missing Checks:** \`${count}\`\n`;
+
+
+             if (count > 0) {
+              body = `@${pr_author} 🚨 **Validation Failed!**, Please update the PR description to meet all requirements.`;
+              body += `\n📝 **Missing Items List :**\n\n\`\`\`\n${missing}\n\`\`\``;
+            } else {
+              body = `✅ checklist cleared @${pr_author} — All validations passed! Your PR is good to go. 🚀`;
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number,
+              body
+            });
+
+
+           
