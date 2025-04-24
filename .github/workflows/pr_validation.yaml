@@ -113,8 +113,6 @@ jobs:
             const missing = `${{ steps.validation.outputs.missing_checks }}`;
             const count = parseInt("${{ steps.validation.outputs.missing_count }}");
 
-            echo "$pr_author"
-            echo "author name"
             let body = `**Checklist Validation Result:**\n\n`;
             body += ` **Total Missing Checks:** \`${count}\`\n`;
 
