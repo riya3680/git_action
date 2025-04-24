@@ -135,7 +135,7 @@ jobs:
             DBT_RUN_ID: ${{ steps.run-dbt.outputs.dbt_run_id }}
 
   validate-pr-checklist:
-    if: ${{ github.event.pull_request.base.ref == 'dev' }}
+    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'dev' }}
     runs-on: ubuntu-latest
     steps:
       - name: Check Required PR Checklists
