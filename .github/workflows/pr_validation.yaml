@@ -15,6 +15,7 @@ env:
 
 
 jobs:
+
   validate-pr-checklist:
     runs-on: ubuntu-latest
     steps:
@@ -126,4 +127,37 @@ jobs:
               issue_number,
               body
             });
+            
+    validate-pr:
+        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+        runs-on: ubuntu-22.04
+        steps:
+          - name: Check PR source and target branches
+            env:
+              PR_TARGET: ${{ github.event.pull_request.base.ref }}
+              PR_SOURCE: ${{ github.event.pull_request.head.ref }}
+            run: |
+              echo "Target Branch: $PR_TARGET"
+              echo "Source Branch: $PR_SOURCE"
+    
+              # Check if the source branch is a revert branch
+              if [[ "$PR_SOURCE" == revert-* ]]; then
+                echo "PR from revert branch is allowed."
+                exit 0
+              fi
+    
+              # Define allowed branches
+              if [ "$PR_TARGET" = "main" ]; then
+                if [ "$PR_SOURCE" != "uat" ]; then
+                  echo "You can only create a PR to 'main' from 'uat'!"
+                  exit 1
+                fi
+              elif [ "$PR_TARGET" = "uat" ]; then
+                if [ "$PR_SOURCE" != "dev" ]; then
+                  echo "You can only create a PR to 'uat' from 'dev'!"
+                  exit 1
+                fi
+              else
+            echo "PR validation passed."
+          fi
 
