@@ -1,4 +1,5 @@
 name: DBT Deploy Workflow
+
 on:
   push:
     branches: [dev, uat, main]
@@ -14,14 +15,8 @@ env:
 
 
 jobs:
-
   validate-pr-checklist:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && contains(fromJson('["opened", "edited", "synchronize"]'), github.event.action)
-    permissions:
-      pull-requests: write
-      contents: read
-      issues: write
     steps:
       - name: Check Required PR Checklists
         id: validation
@@ -103,25 +98,26 @@ jobs:
         shell: bash {0} 
           
       - name: Comment on PR
-        if: always() && github.event.pull_request.head.repo.full_name == github.repository
+        if: always()
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const issue_number = context.payload.pull_request.number;
-            const pr_author = context.payload.pull_request.user.login;
+            const pr_author = "${{ steps.pr_data.outputs.author }}";
             const missing = `${{ steps.validation.outputs.missing_checks }}`;
             const count = parseInt("${{ steps.validation.outputs.missing_count }}");
 
-            let body = `**Checklist Validation Result:**\n\n`;
-            body += ` **Total Missing Checks:** \`${count}\`\n`;
+            
+            let body = `🔍 **Checklist Validation Result:**\n\n`;
+            body += `🧮 **Total Missing Checks:** \`${count}\`\n`;
 
 
              if (count > 0) {
               body = `@${pr_author} 🚨 **Validation Failed!**, Please update the PR description to meet all requirements.`;
-              body += `\n**Missing Items List :**\n\n\`\`\`\n${missing}\n\`\`\``;
+              body += `\n📝 **Missing Items List :**\n\n\`\`\`\n${missing}\n\`\`\``;
             } else {
-              body = `✅ checklist cleared @${pr_author} — All validations passed! Your PR is good to go. `;
+              body = `✅ checklist cleared @${pr_author} — All validations passed! Your PR is good to go. 🚀`;
             }
 
             await github.rest.issues.createComment({
@@ -130,5 +126,4 @@ jobs:
               issue_number,
               body
             });
-
 
