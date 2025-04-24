@@ -1,9 +1,6 @@
 name: DBT Deploy Workflow
 on:
-  push:
-    branches: [dev, uat, main]
   pull_request:
-    branches: [dev, uat, main]
     types: [opened, edited, synchronize]
 
 permissions:
@@ -11,6 +8,7 @@ permissions:
   contents: read
 env:
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+
 
 jobs:
   
@@ -229,11 +227,12 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const issue_number = context.payload.pull_request.number;
-            const pr_author = "${{ steps.pr_data.outputs.author }}";
+            const pr_author = context.payload.pull_request.user.login;
             const missing = `${{ steps.validation.outputs.missing_checks }}`;
             const count = parseInt("${{ steps.validation.outputs.missing_count }}");
 
-            
+            echo "$pr_author"
+            echo "author name"
             let body = `**Checklist Validation Result:**\n\n`;
             body += ` **Total Missing Checks:** \`${count}\`\n`;
 
