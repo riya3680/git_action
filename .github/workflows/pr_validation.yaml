@@ -15,7 +15,7 @@ env:
 jobs:
 
   validate-pr-checklist:
-    if: github.event_name == 'pull_request' && contains(fromJson('["opened", "edited", "synchronize"]'), github.event.action)
+    if: github.event.pull_request.base.ref == 'dev'
     runs-on: ubuntu-latest
     steps:
       - name: Check Required PR Checklists
