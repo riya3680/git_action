@@ -50,12 +50,13 @@ jobs:
           DEV_LINE=$(echo "$PR_BODY" | grep -iE '^\s*-\s*\*\*Developer:\*\*')
           DEV_TEXT=$(echo "$DEV_LINE" | sed -E 's/.*\*\*Developer:\*\*\s*//' | sed -E 's/<!--.*-->//g' | xargs)
           DEV_WORD_COUNT=$(echo "$DEV_TEXT" | wc -w)         
-          if [[ -z "$DEV_TEXT" || "$DEV_WORD_COUNT" -lt 1 ]]; then
-            echo "❌ **Failed:** *Developer* field must have at least 1 words."
+          PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+
+          if [[ "$DEV_TEXT" != "$PR_AUTHOR" ]]; then
+            echo "❌ **Failed:** *Developer* field must match the PR author ($PR_AUTHOR)."
             ((MISSING_COUNT++))
-            MISSING_CHECKS+="- Developer field must have at least 1 word.\n"
+            MISSING_CHECKS+="- Developer field must match the PR author ($PR_AUTHOR).\n"
           fi
-          
           
           REQUIRED_CHECKLISTS=(
             'Required databases are available.'
