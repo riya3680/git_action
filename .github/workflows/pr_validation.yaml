@@ -5,6 +5,12 @@ on:
   pull_request:
     branches: [dev, uat, main]
 
+permissions:
+  pull-requests: write
+  contents: read
+env:
+  PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+
 jobs:
   
   validate-pr:
