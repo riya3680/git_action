@@ -161,3 +161,50 @@ jobs:
           else
             echo "PR validation passed."
           fi
+          
+  dbt_linting:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout current GitHub Actions workflow repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+          cache: "poetry"
+
+      - name: Building Potery Packages
+        run: |
+           poetry install
+
+      - name: Get modified SQL files
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          MODIFIED_SQL_FILES=$(git diff --name-only --diff-filter=d origin/${{ github.base_ref }} HEAD '*.sql' | tr '\n' ' ')
+          if [ -z "$MODIFIED_SQL_FILES" ]; then
+            echo "MODIFIED_FILES=None" >> $GITHUB_ENV
+          else
+            echo "MODIFIED_FILES=$MODIFIED_SQL_FILES" >> $GITHUB_ENV
+          fi
+
+      - name: SQLFluff DBT lint
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ "$MODIFIED_FILES" == "None" ]; then
+            echo "No modified SQL files to lint."
+          else
+            echo "Starting SQLFluff lint on modified SQL files..."
+            for file in $MODIFIED_FILES; do
+              echo "Linting $file..."
+              poetry run sqlfluff lint --verbose $file
+            done
+          fi
