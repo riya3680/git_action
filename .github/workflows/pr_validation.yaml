@@ -1,4 +1,5 @@
 name: DBT Deploy Workflow
+
 on:
   push:
     branches: [dev, uat, main]
@@ -17,11 +18,6 @@ jobs:
 
   validate-pr-checklist:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && contains(fromJson('["opened", "edited", "synchronize"]'), github.event.action)
-    permissions:
-      pull-requests: write
-      contents: read
-      issues: write
     steps:
       - name: Check Required PR Checklists
         id: validation
@@ -103,25 +99,26 @@ jobs:
         shell: bash {0} 
           
       - name: Comment on PR
-        if: always() && github.event.pull_request.head.repo.full_name == github.repository
+        if: always()
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const issue_number = context.payload.pull_request.number;
-            const pr_author = context.payload.pull_request.user.login;
+            const pr_author = "${{ steps.pr_data.outputs.author }}";
             const missing = `${{ steps.validation.outputs.missing_checks }}`;
             const count = parseInt("${{ steps.validation.outputs.missing_count }}");
 
-            let body = `**Checklist Validation Result:**\n\n`;
-            body += ` **Total Missing Checks:** \`${count}\`\n`;
+            
+            let body = `🔍 **Checklist Validation Result:**\n\n`;
+            body += `🧮 **Total Missing Checks:** \`${count}\`\n`;
 
 
              if (count > 0) {
               body = `@${pr_author} 🚨 **Validation Failed!**, Please update the PR description to meet all requirements.`;
-              body += `\n**Missing Items List :**\n\n\`\`\`\n${missing}\n\`\`\``;
+              body += `\n📝 **Missing Items List :**\n\n\`\`\`\n${missing}\n\`\`\``;
             } else {
-              body = `✅ checklist cleared @${pr_author} — All validations passed! Your PR is good to go. `;
+              body = `✅ checklist cleared @${pr_author} — All validations passed! Your PR is good to go. 🚀`;
             }
 
             await github.rest.issues.createComment({
@@ -130,5 +127,36 @@ jobs:
               issue_number,
               body
             });
-
-
+            
+    validate-pr:
+        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+        runs-on: ubuntu-22.04
+        steps:
+          - name: Check PR source and target branches
+            env:
+              PR_TARGET: ${{ github.event.pull_request.base.ref }}
+              PR_SOURCE: ${{ github.event.pull_request.head.ref }}
+            run: |
+              echo "Target Branch: $PR_TARGET"
+              echo "Source Branch: $PR_SOURCE"
+    
+              # Check if the source branch is a revert branch
+              if [[ "$PR_SOURCE" == revert-* ]]; then
+                echo "PR from revert branch is allowed."
+                exit 0
+              fi
+    
+              # Define allowed branches
+              if [ "$PR_TARGET" = "main" ]; then
+                if [ "$PR_SOURCE" != "uat" ]; then
+                  echo "You can only create a PR to 'main' from 'uat'!"
+                  exit 1
+                fi
+              elif [ "$PR_TARGET" = "uat" ]; then
+                if [ "$PR_SOURCE" != "dev" ]; then
+                  echo "You can only create a PR to 'uat' from 'dev'!"
+                  exit 1
+                fi
+              else
+            echo "PR validation passed."
+          fi
