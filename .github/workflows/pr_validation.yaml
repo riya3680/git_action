@@ -1,5 +1,4 @@
 name: DBT Deploy Workflow
-
 on:
   push:
     branches: [dev, uat, main]
@@ -12,7 +11,6 @@ permissions:
   contents: read
 env:
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-
 
 jobs:
 
@@ -110,15 +108,15 @@ jobs:
             const count = parseInt("${{ steps.validation.outputs.missing_count }}");
 
             
-            let body = `🔍 **Checklist Validation Result:**\n\n`;
-            body += `🧮 **Total Missing Checks:** \`${count}\`\n`;
+            let body = ` **Checklist Validation Result:**\n\n`;
+            body += ` **Total Missing Checks:** \`${count}\`\n`;
 
 
              if (count > 0) {
               body = `@${pr_author} 🚨 **Validation Failed!**, Please update the PR description to meet all requirements.`;
-              body += `\n📝 **Missing Items List :**\n\n\`\`\`\n${missing}\n\`\`\``;
+              body += `\n **Missing Items List :**\n\n\`\`\`\n${missing}\n\`\`\``;
             } else {
-              body = `✅ checklist cleared @${pr_author} — All validations passed! Your PR is good to go. 🚀`;
+              body = `✅ checklist cleared @${pr_author} — All validations passed! Your PR is good to go. `;
             }
 
             await github.rest.issues.createComment({
@@ -127,37 +125,291 @@ jobs:
               issue_number,
               body
             });
-            
-    validate-pr:
-        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
-        runs-on: ubuntu-22.04
-        steps:
-          - name: Check PR source and target branches
-            env:
-              PR_TARGET: ${{ github.event.pull_request.base.ref }}
-              PR_SOURCE: ${{ github.event.pull_request.head.ref }}
-            run: |
-              echo "Target Branch: $PR_TARGET"
-              echo "Source Branch: $PR_SOURCE"
-    
-              # Check if the source branch is a revert branch
-              if [[ "$PR_SOURCE" == revert-* ]]; then
-                echo "PR from revert branch is allowed."
-                exit 0
-              fi
-    
-              # Define allowed branches
-              if [ "$PR_TARGET" = "main" ]; then
-                if [ "$PR_SOURCE" != "uat" ]; then
-                  echo "You can only create a PR to 'main' from 'uat'!"
-                  exit 1
-                fi
-              elif [ "$PR_TARGET" = "uat" ]; then
-                if [ "$PR_SOURCE" != "dev" ]; then
-                  echo "You can only create a PR to 'uat' from 'dev'!"
-                  exit 1
-                fi
-              else
+  
+  validate-pr:
+    if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check PR source and target branches
+        env:
+          PR_TARGET: ${{ github.event.pull_request.base.ref }}
+          PR_SOURCE: ${{ github.event.pull_request.head.ref }}
+        run: |
+          echo "Target Branch: $PR_TARGET"
+          echo "Source Branch: $PR_SOURCE"
+
+          # Check if the source branch is a revert branch
+          if [[ "$PR_SOURCE" == revert-* ]]; then
+            echo "PR from revert branch is allowed."
+            exit 0
+          fi
+
+          # Define allowed branches
+          if [ "$PR_TARGET" = "main" ]; then
+            if [ "$PR_SOURCE" != "uat" ]; then
+              echo "You can only create a PR to 'main' from 'uat'!"
+              exit 1
+            fi
+          elif [ "$PR_TARGET" = "uat" ]; then
+            if [ "$PR_SOURCE" != "dev" ]; then
+              echo "You can only create a PR to 'uat' from 'dev'!"
+              exit 1
+            fi
+          else
             echo "PR validation passed."
           fi
 
+  dbt_linting:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout current GitHub Actions workflow repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+          cache: "poetry"
+
+      - name: Building Potery Packages
+        run: |
+           poetry install
+
+      - name: Get modified SQL files
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          MODIFIED_SQL_FILES=$(git diff --name-only --diff-filter=d origin/${{ github.base_ref }} HEAD '*.sql' | tr '\n' ' ')
+          if [ -z "$MODIFIED_SQL_FILES" ]; then
+            echo "MODIFIED_FILES=None" >> $GITHUB_ENV
+          else
+            echo "MODIFIED_FILES=$MODIFIED_SQL_FILES" >> $GITHUB_ENV
+          fi
+
+      - name: SQLFluff DBT lint
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ "$MODIFIED_FILES" == "None" ]; then
+            echo "No modified SQL files to lint."
+          else
+            echo "Starting SQLFluff lint on modified SQL files..."
+            for file in $MODIFIED_FILES; do
+              echo "Linting $file..."
+              poetry run sqlfluff lint --verbose $file
+            done
+          fi
+  
+
+  # dbt_test_and_doc_coverage:
+  #    needs: [dbt_linting]
+  #    runs-on: ubuntu-latest
+  #    if: ${{ github.event_name == 'pull_request' && github.base_ref == 'dev' }}
+  #    environment: dev
+  #    permissions:
+  #      id-token: write
+  #      contents: read
+  #      packages: read
+  #      pull-requests: write
+  #    steps:
+  #      - name: Checkout current GitHub Actions workflow repository
+  #        uses: actions/checkout@v4
+
+  #      - name: Install poetry
+  #        run: |
+  #          python -m pip install --upgrade pip
+  #          pip install poetry
+
+  #      - name: Set up Python
+  #        uses: actions/setup-python@v4
+  #        with:
+  #          python-version: 3.8
+  #          cache: "poetry"
+
+  #      - name: Configure build environment
+  #        run: poetry install
+
+  #      #- name: Setup dbt
+  #      #  run: |
+  #      #    pip install dbt-snowflake==1.8
+  #      #    dbt deps
+  #      #    echo "SNOWFLAKE_ENV=dev" >> $GITHUB_ENV
+  #      #    echo "DBT_ACCOUNT=${{ env.SNOWFLAKE_ACCOUNT }}" >> $GITHUB_ENV
+  #      #    echo "DBT_USER=${{ env.SNOWFLAKE_USER }}" >> $GITHUB_ENV
+  #      #    echo "DBT_PASSWORD=${{ env.SNOWFLAKE_PASSWORD }}" >> $GITHUB_ENV
+  #      #    echo "DBT_WAREHOUSE=WH_${{ env.SNOWFLAKE_USER }}" >> $GITHUB_ENV
+  #      #    echo "DBT_ROLE=ROLE_${{ env.SNOWFLAKE_USER }}" >> $GITHUB_ENV
+
+  #      #- name: Create profiles.yml
+  #      #  run: |
+  #      #    cat <<EOF > profiles.yml
+  #      #    collinson_idp:
+  #      #      target: ${{ env.SNOWFLAKE_ENV }}
+  #      #      outputs:
+  #      #        ${{ env.SNOWFLAKE_ENV }}:
+  #      #          database: SNOWFLAKE
+  #      #          schema: INFORMATION_SCHEMA
+  #      #          type: snowflake
+  #      #          account: "{{ env_var('DBT_ACCOUNT') }}"
+  #      #          user: "{{ env_var('DBT_USER') }}"
+  #      #          password: "{{ env_var('DBT_PASSWORD') }}"
+  #      #          warehouse: "{{ env_var('DBT_WAREHOUSE') }}"
+  #      #          role: "{{ env_var('DBT_ROLE') }}"
+  #      #          threads: 8
+  #      #          client_session_keep_alive: False
+  #      #    EOFgit
+
+  #      - name: Get Project ID and job ID from Secrets
+  #        id: get_ids
+  #        run: |
+  #         echo "project_id=${{ secrets.DBT_PROJECT_ID }}" >> $GITHUB_OUTPUT
+  #         echo "job_id=${{ secrets.DBT_DOCS_JOB_ID }}" >> $GITHUB_OUTPUT
+  #         if [ "${GITHUB_EVENT_NAME}" == "pull_request" ]; then
+  #           echo "branch_name=${GITHUB_HEAD_REF}" >> $GITHUB_OUTPUT
+  #         else
+  #           echo "branch_name=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
+  #         fi
+
+  #      - name: Run dbt docs generate
+  #        uses: ./.github/actions/dbt-run-job
+  #        with:
+  #         DBT_PROJECT_ID: ${{ steps.get_ids.outputs.project_id }}
+  #         DBT_PR_JOB_ID: ${{ steps.get_ids.outputs.job_id }}
+  #         DBT_ACCOUNT_ID: ${{ secrets.DBT_ACCOUNT_ID }}
+  #         DBT_API_KEY: ${{ secrets.TF_VAR_DBT_CLOUD_TOKEN }}
+  #         DBT_JOB_BRANCH: ${{ steps.get_ids.outputs.branch_name }}
+ 
+  #      - name: Get id of the last successful run
+  #        id: get-last-successful-run-id
+  #        env:
+  #         DBT_ACCOUNT_ID: ${{ secrets.DBT_ACCOUNT_ID }}
+  #         DBT_API_KEY: ${{ secrets.TF_VAR_DBT_CLOUD_TOKEN }}
+  #        run: |
+  #          echo "$(poetry run python -m dbt_cli.main fetch_last_run_id --success-only ${{ secrets.DBT_DEPLOYMENT_ENVIRONMENT_ID }} | grep 'last_successful_run_id')" >> $GITHUB_OUTPUT
+
+  #      - name: Output last successful run ID
+  #        run: |
+  #          echo "last_successful_run_id: ${{ steps.get-last-successful-run-id.outputs.last_successful_run_id }}"
+
+  #      - name: Fetch manifest.json from last successful run
+  #        uses: ./.github/actions/dbt-retrieve-artifact
+  #        with:
+  #          DBT_ACCOUNT_ID: ${{ secrets.DBT_ACCOUNT_ID }}
+  #          DBT_API_KEY: ${{ secrets.TF_VAR_DBT_CLOUD_TOKEN }}
+  #          DBT_REMAINDER: manifest.json
+  #          DBT_CATEGORY: runs
+  #          DBT_ID: ${{ steps.get-last-successful-run-id.outputs.last_successful_run_id }}
+  #          DBT_TARGET: target/state
+
+  #      - name: Fetch catalog.json from last successful run
+  #        uses: ./.github/actions/dbt-retrieve-artifact
+  #        with:
+  #          DBT_ACCOUNT_ID: ${{ secrets.DBT_ACCOUNT_ID }}
+  #          DBT_API_KEY: ${{ secrets.TF_VAR_DBT_CLOUD_TOKEN }}
+  #          DBT_REMAINDER: catalog.json
+  #          DBT_CATEGORY: runs
+  #          DBT_ID: ${{ steps.get-last-successful-run-id.outputs.last_successful_run_id }}
+  #          DBT_TARGET: target/state
+
+  #      - name: Get modified SQL files
+  #        id: get-modified-files
+  #        run: |
+  #         git fetch origin ${{ github.base_ref }}
+  #         modified_sql_files=$(git diff --name-only --diff-filter=d origin/${{ github.base_ref }} HEAD '*.sql' | tr '\n' ' ')
+  #         if [ -z "$modified_sql_files" ]; then
+  #           echo "modified_files=None" >> $GITHUB_OUTPUT
+  #         else
+  #           echo "modified_files=$modified_sql_files" >> $GITHUB_OUTPUT
+  #         fi
+
+  #      #- name: Get modified files
+  #      #  id: get-modified-files
+  #      #  env:
+  #      #    DBT_STATE: target/state
+  #      #  run: echo "modified_files=$(dbt ls -s state:modified.body --resource-type model --state target/state --quiet | tr '\n' ' ')" >> $GITHUB_OUTPUT
+
+  #      - name: Output modified files
+  #        run: |
+  #          echo "modified_files: ${{ steps.get-modified-files.outputs.modified_files }}"
+
+  #      - name: Create PR comment
+  #        run: |
+  #         export files=$(echo "${{ steps.get-modified-files.outputs.modified_files }}" | tr ' ' '\n')
+  #         if [ -z "$files" ]; then
+  #           echo "No files with changes found."
+  #           echo "" > coverage-report.md
+  #         else
+  #           chmod u+x ./scripts/generate_coverage_report.sh
+  #           ./scripts/generate_coverage_report.sh
+  #         fi
+
+  #      - name: Add code coverage PR Comment
+  #        uses: marocchino/sticky-pull-request-comment@v2
+  #        if: github.event_name == 'pull_request'
+  #        with:
+  #          header: Docs report
+  #          recreate: true
+  #          path: coverage-report.md
+
+  #      #- name: Define files output
+  #      #  id: define_files
+  #      #  run: |
+  #      #    FOLDER_PATH="models"
+  #      #    FILES=$(find $FOLDER_PATH -type f | tr '\n' ' ')
+  #      #    echo "::set-output name=files::$FILES"
+
+  #      #- name: Run dbt checkpoint
+  #      #  uses: dbt-checkpoint/action@v0.1
+  #      #  with:
+  #      #    extra_args: --files ${{ steps.define_files.outputs.files }}
+  #      #    dbt_version: 1.6.3
+  #      #    dbt_adapter: dbt-snowflake
+
+  deploy_dbt:
+    needs: [dbt_linting, validate-pr]
+    runs-on: ubuntu-22.04
+    environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
+    if: ${{ github.event_name == 'push' }}
+    steps:
+      - name: Checkout current GitHub Actions workflow repository
+        uses: actions/checkout@v4
+
+      - name: Install poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+          cache: "poetry"
+
+      - name: Configure build environment
+        run: poetry install
+        
+      - name: Run dbt for test
+        id: run-dbt
+        uses: ./.github/actions/dbt-run-job
+        with:
+          DBT_PROJECT_ID: ${{ secrets.DBT_PROJECT_ID }}
+          DBT_PR_JOB_ID: ${{ secrets.DBT_JOB_ID }}
+          DBT_ACCOUNT_ID: ${{ secrets.DBT_ACCOUNT_ID }}
+          DBT_API_KEY: ${{ secrets.TF_VAR_DBT_CLOUD_TOKEN }}
+      
+      - name: Display run errors
+        uses: ./.github/actions/dbt-display-errors
+        if: failure() && steps.run-dbt.outcome == 'failure'
+        with:
+            DBT_ACCOUNT_ID: ${{ secrets.DBT_ACCOUNT_ID }}
+            DBT_API_KEY: ${{ secrets.TF_VAR_DBT_CLOUD_TOKEN }}
+            DBT_JOB_ID: ${{ secrets.DBT_JOB_ID }}
+            DBT_RUN_ID: ${{ steps.run-dbt.outputs.dbt_run_id }}
+
+  
