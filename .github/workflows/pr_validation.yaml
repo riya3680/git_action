@@ -52,7 +52,7 @@ jobs:
           DEV_WORD_COUNT=$(echo "$DEV_TEXT" | wc -w)         
           PR_AUTHOR="${{ github.event.pull_request.user.login }}"
 
-          if [[ "$DEV_TEXT" != "$PR_AUTHOR" ]]; then
+          if [[ "$DEV_TEXT" != "@$PR_AUTHOR" ]]; then
             echo "❌ **Failed:** *Developer* field must match the PR author ($PR_AUTHOR)."
             ((MISSING_COUNT++))
             MISSING_CHECKS+="- Developer field must match the PR author ($PR_AUTHOR).\n"
