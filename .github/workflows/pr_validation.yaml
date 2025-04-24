@@ -161,7 +161,7 @@ jobs:
           else
             echo "PR validation passed."
           fi
-          
+
   dbt_linting:
     runs-on: ubuntu-22.04
     steps:
@@ -208,3 +208,44 @@ jobs:
               poetry run sqlfluff lint --verbose $file
             done
           fi
+  
+  deploy_dbt:
+    needs: [dbt_linting, validate-pr]
+    runs-on: ubuntu-22.04
+    environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
+    if: ${{ github.event_name == 'push' }}
+    steps:
+      - name: Checkout current GitHub Actions workflow repository
+        uses: actions/checkout@v4
+
+      - name: Install poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+          cache: "poetry"
+
+      - name: Configure build environment
+        run: poetry install
+        
+      - name: Run dbt for test
+        id: run-dbt
+        uses: ./.github/actions/dbt-run-job
+        with:
+          DBT_PROJECT_ID: ${{ secrets.DBT_PROJECT_ID }}
+          DBT_PR_JOB_ID: ${{ secrets.DBT_JOB_ID }}
+          DBT_ACCOUNT_ID: ${{ secrets.DBT_ACCOUNT_ID }}
+          DBT_API_KEY: ${{ secrets.TF_VAR_DBT_CLOUD_TOKEN }}
+      
+      - name: Display run errors
+        uses: ./.github/actions/dbt-display-errors
+        if: failure() && steps.run-dbt.outcome == 'failure'
+        with:
+            DBT_ACCOUNT_ID: ${{ secrets.DBT_ACCOUNT_ID }}
+            DBT_API_KEY: ${{ secrets.TF_VAR_DBT_CLOUD_TOKEN }}
+            DBT_JOB_ID: ${{ secrets.DBT_JOB_ID }}
+            DBT_RUN_ID: ${{ steps.run-dbt.outputs.dbt_run_id }}
