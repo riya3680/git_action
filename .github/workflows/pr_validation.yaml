@@ -1,17 +1,133 @@
-name: PR Checklist Validation
-
+name: DBT Deploy Workflow
 on:
+  push:
+    branches: [dev, uat, main]
   pull_request:
-    types: [opened, edited, synchronize]
-
-permissions:
-  pull-requests: write
-  contents: read
-env:
-  PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-
+    branches: [dev, uat, main]
 
 jobs:
+  
+  validate-pr:
+    if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check PR source and target branches
+        env:
+          PR_TARGET: ${{ github.event.pull_request.base.ref }}
+          PR_SOURCE: ${{ github.event.pull_request.head.ref }}
+        run: |
+          echo "Target Branch: $PR_TARGET"
+          echo "Source Branch: $PR_SOURCE"
+
+          # Check if the source branch is a revert branch
+          if [[ "$PR_SOURCE" == revert-* ]]; then
+            echo "PR from revert branch is allowed."
+            exit 0
+          fi
+
+          # Define allowed branches
+          if [ "$PR_TARGET" = "main" ]; then
+            if [ "$PR_SOURCE" != "uat" ]; then
+              echo "You can only create a PR to 'main' from 'uat'!"
+              exit 1
+            fi
+          elif [ "$PR_TARGET" = "uat" ]; then
+            if [ "$PR_SOURCE" != "dev" ]; then
+              echo "You can only create a PR to 'uat' from 'dev'!"
+              exit 1
+            fi
+          else
+            echo "PR validation passed."
+          fi
+
+  dbt_linting:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout current GitHub Actions workflow repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+          cache: "poetry"
+
+      - name: Building Potery Packages
+        run: |
+           poetry install
+
+      - name: Get modified SQL files
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          MODIFIED_SQL_FILES=$(git diff --name-only --diff-filter=d origin/${{ github.base_ref }} HEAD '*.sql' | tr '\n' ' ')
+          if [ -z "$MODIFIED_SQL_FILES" ]; then
+            echo "MODIFIED_FILES=None" >> $GITHUB_ENV
+          else
+            echo "MODIFIED_FILES=$MODIFIED_SQL_FILES" >> $GITHUB_ENV
+          fi
+
+      - name: SQLFluff DBT lint
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ "$MODIFIED_FILES" == "None" ]; then
+            echo "No modified SQL files to lint."
+          else
+            echo "Starting SQLFluff lint on modified SQL files..."
+            for file in $MODIFIED_FILES; do
+              echo "Linting $file..."
+              poetry run sqlfluff lint --verbose $file
+            done
+          fi
+
+  deploy_dbt:
+    needs: [dbt_linting, validate-pr]
+    runs-on: ubuntu-22.04
+    environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
+    if: ${{ github.event_name == 'push' }}
+    steps:
+      - name: Checkout current GitHub Actions workflow repository
+        uses: actions/checkout@v4
+
+      - name: Install poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+          cache: "poetry"
+
+      - name: Configure build environment
+        run: poetry install
+        
+      - name: Run dbt for test
+        id: run-dbt
+        uses: ./.github/actions/dbt-run-job
+        with:
+          DBT_PROJECT_ID: ${{ secrets.DBT_PROJECT_ID }}
+          DBT_PR_JOB_ID: ${{ secrets.DBT_JOB_ID }}
+          DBT_ACCOUNT_ID: ${{ secrets.DBT_ACCOUNT_ID }}
+          DBT_API_KEY: ${{ secrets.TF_VAR_DBT_CLOUD_TOKEN }}
+      
+      - name: Display run errors
+        uses: ./.github/actions/dbt-display-errors
+        if: failure() && steps.run-dbt.outcome == 'failure'
+        with:
+            DBT_ACCOUNT_ID: ${{ secrets.DBT_ACCOUNT_ID }}
+            DBT_API_KEY: ${{ secrets.TF_VAR_DBT_CLOUD_TOKEN }}
+            DBT_JOB_ID: ${{ secrets.DBT_JOB_ID }}
+            DBT_RUN_ID: ${{ steps.run-dbt.outputs.dbt_run_id }}
+
   validate-pr-checklist:
     runs-on: ubuntu-latest
     steps:
@@ -106,15 +222,15 @@ jobs:
             const count = parseInt("${{ steps.validation.outputs.missing_count }}");
 
             
-            let body = `🔍 **Checklist Validation Result:**\n\n`;
-            body += `🧮 **Total Missing Checks:** \`${count}\`\n`;
+            let body = `**Checklist Validation Result:**\n\n`;
+            body += ` **Total Missing Checks:** \`${count}\`\n`;
 
 
              if (count > 0) {
               body = `@${pr_author} 🚨 **Validation Failed!**, Please update the PR description to meet all requirements.`;
-              body += `\n📝 **Missing Items List :**\n\n\`\`\`\n${missing}\n\`\`\``;
+              body += `\n**Missing Items List :**\n\n\`\`\`\n${missing}\n\`\`\``;
             } else {
-              body = `✅ checklist cleared @${pr_author} — All validations passed! Your PR is good to go. 🚀`;
+              body = `✅ checklist cleared @${pr_author} — All validations passed! Your PR is good to go. `;
             }
 
             await github.rest.issues.createComment({
@@ -125,4 +241,3 @@ jobs:
             });
 
 
-           
