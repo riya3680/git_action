@@ -123,6 +123,7 @@ jobs:
               body += `🔹 **Step 3: PR Approval Process** – *idp-data-navigators* Repository  
                 link - https://lifestyle-x-wiki.atlassian.net/wiki/x/eQGoRQ
                 Follow the correct approval flow: Peer Review → Domain Owner Review → Code Owner / Platform Team Review.\n`;
+              body += `@${pr_author} please check`;
               body += `\nThanks.`;
             } else {
               body = `✅ checklist cleared @${pr_author} — All validations passed! Your PR is good to go. `;
