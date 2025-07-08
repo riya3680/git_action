@@ -62,12 +62,10 @@ jobs:
           fi
           
           REQUIRED_CHECKLISTS=(
-            'Required databases are available.'
-            'Required schemas are created through the data-platform repo.'
-            'Required source tables are available/updated.'
+            '\*\*Infrastructure Check:\*\*'
             '\*\*Final DEV Testing:\*\* All tests passed, no unready changes present.'
+            '\*\*Schema Documentation:\*\*'
             'This change is ready for further deployment in DEV, UAT & PROD.'
-            'Changes have been validated and look good in DEV/UAT.'
           )
 
           for CHECK in "${REQUIRED_CHECKLISTS[@]}"; do
