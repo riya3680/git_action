@@ -110,10 +110,17 @@ jobs:
             let body = ` **Checklist Validation Result:**\n\n`;
             body += ` **Total Missing Checks:** \`${count}\`\n`;
 
-
-             if (count > 0) {
+            if (count > 0) {
               body = `@${pr_author} 🚨 **Validation Failed!**, Please update the PR description to meet all requirements.`;
               body += `\n **Missing Items List :**\n\n\`\`\`\n${missing}\n\`\`\``;
+              body += `\n\n📘 **Please refer to the following documents to ensure your PR is complete and review-ready:**\n`;
+              body += `🔹 **Step 1: Rulebook for Developers – idp-data-navigators Repository
+                Start here. This document outlines the key responsibilities, standards, and expectations from all contributors.\n`;
+              body += `🔹 **Step 2: How to Raise a Perfect Pull Request (PR)**  
+                This guide helps ensure your PR is complete — with proper JIRA links, context, infra checks, testing screenshots, validation proof, and that all checkboxes in the PR template are ticked.\n`;
+              body += `🔹 **Step 3: PR Approval Process** – *idp-data-navigators* Repository  
+                Follow the correct approval flow: Peer Review → Domain Owner Review → Code Owner / Platform Team Review.\n`;
+              body += `\nThanks.`;
             } else {
               body = `✅ checklist cleared @${pr_author} — All validations passed! Your PR is good to go. `;
             }
