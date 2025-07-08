@@ -115,10 +115,13 @@ jobs:
               body += `\n **Missing Items List :**\n\n\`\`\`\n${missing}\n\`\`\``;
               body += `\n\n📘 **Please refer to the following documents to ensure your PR is complete and review-ready:**\n`;
               body += `🔹 **Step 1: Rulebook for Developers – idp-data-navigators Repository
+                link- https://lifestyle-x-wiki.atlassian.net/wiki/x/DACmRQ
                 Start here. This document outlines the key responsibilities, standards, and expectations from all contributors.\n`;
-              body += `🔹 **Step 2: How to Raise a Perfect Pull Request (PR)**  
+              body += `🔹 **Step 2: How to Raise a Perfect Pull Request (PR)** 
+                link- https://lifestyle-x-wiki.atlassian.net/wiki/x/7YCpRQ
                 This guide helps ensure your PR is complete — with proper JIRA links, context, infra checks, testing screenshots, validation proof, and that all checkboxes in the PR template are ticked.\n`;
               body += `🔹 **Step 3: PR Approval Process** – *idp-data-navigators* Repository  
+                link - https://lifestyle-x-wiki.atlassian.net/wiki/x/eQGoRQ
                 Follow the correct approval flow: Peer Review → Domain Owner Review → Code Owner / Platform Team Review.\n`;
               body += `\nThanks.`;
             } else {
